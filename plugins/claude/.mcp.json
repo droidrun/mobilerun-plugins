@@ -2,7 +2,7 @@
   "mcpServers": {
     "mobilerun": {
       "type": "http",
-      "url": "https://api.mobilerun.ai/v1/mcp"
+      "url": "https://cloud.mobilerun.ai/api/mcp"
     }
   }
 }

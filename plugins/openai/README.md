@@ -5,12 +5,12 @@ A portable plugin for ChatGPT and Codex, containing one hosted Mobilerun MCP con
 ## Package
 
 - `plugin.json`: portable identity and OpenAI presentation, onboarding, and draft review cases.
-- `mcp.json`: one Streamable HTTP server at `https://api.mobilerun.ai/v1/mcp`.
+- `mcp.json`: one Streamable HTTP server at `https://cloud.mobilerun.ai/api/mcp`.
 - `skills/onboarding/SKILL.md`: connection recovery and account/billing guidance.
 - `assets/logo.svg`: existing 256×256 Mobilerun logo from `droidrun/mobilerun-mcp/assets/logo.svg`.
 - `LICENSE`: MIT notice included for independent distribution.
 
-The configuration contains no bearer header or bundled credential. Follow [Mobilerun's public authentication instructions](https://docs.mobilerun.ai/mcp-server#api-key-authentication). Configure credentials only through the host's private supported mechanism. Browser OAuth and dynamic registration at this URL have not been verified. Use OAuth only if advertised and supported for this endpoint. If the marketplace requires OAuth and it is unavailable here, treat that as a review blocker rather than disabling authentication or embedding a key.
+The configuration contains no bearer header or bundled credential. Follow [Mobilerun's documented browser OAuth instructions](https://docs.mobilerun.ai/mcp-server#oauth-authentication) through the host. Actual ChatGPT login remains unverified. If the required flow is unavailable, treat that as a review blocker rather than disabling authentication or embedding credentials.
 
 ## Test locally in ChatGPT desktop / Codex
 
@@ -18,14 +18,14 @@ The repo already includes `.agents/plugins/marketplace.json` pointing to `./plug
 
 1. Open this repository in a supported ChatGPT desktop/Codex environment and restart/refresh the desktop app's plugin sources.
 2. In the Plugins Directory, select **Mobilerun local plugins** and install **Mobilerun**. Local-marketplace support varies by client and organization policy.
-3. Configure authentication through the host's supported private mechanism. Browser OAuth at this URL is unverified; if the host requires an unavailable flow, stop and record BLOCKED. Run plugin setup to invoke the packaged onboarding skill.
+3. Follow the host's browser OAuth flow. Actual login remains unverified; if the required flow is unavailable, stop and record BLOCKED. Run plugin setup to invoke the packaged onboarding skill.
 4. In a new chat, ask “List my Mobilerun devices.” A returned empty list is a valid connection; no device purchase is required.
 
 For a separate marketplace source, the documented CLI route is `codex plugin marketplace add <repository-root>`. A marketplace makes a plugin discoverable; it does not bypass host installation, trust, account, or authorization requirements.
 
 ### Test the hosted MCP in ChatGPT web
 
-Go to [Plugins](https://chatgpt.com/plugins), select the plus button > **Add custom MCP server**, enter the hosted endpoint, and use the supported authentication flow before **Create as a plugin**. OAuth at this URL is unverified; if required but unavailable, record BLOCKED rather than choosing no authentication or embedding a key. This tests the hosted MCP, **not the full local package or onboarding skill**. Access depends on account/policy. Do not create or guess a `plugin_asdk_app` ID.
+Go to [Plugins](https://chatgpt.com/plugins), select the plus button > **Add custom MCP server**, enter the hosted endpoint, and follow browser OAuth before **Create as a plugin**. Actual ChatGPT login is unverified; if the flow is unavailable, record BLOCKED rather than choosing no authentication or embedding credentials. This tests the hosted MCP, **not the full local package or onboarding skill**. Access depends on account/policy. Do not create or guess a `plugin_asdk_app` ID.
 
 ## Credits, costs, and data
 

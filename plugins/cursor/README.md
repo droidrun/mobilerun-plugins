@@ -8,7 +8,7 @@ Copy this entire directory, including `.cursor-plugin/`, `assets/`, and `LICENSE
 
 Restart Cursor or run **Developer: Reload Window**, then open **Customize** and confirm the Mobilerun MCP component is present. Local-plugin imports must be allowed by organization policy; an installed marketplace plugin of the same name takes precedence.
 
-The server URL is `https://api.mobilerun.ai/v1/mcp`; there are no bundled API keys, tokens, or client secrets. Follow [public authentication instructions](https://docs.mobilerun.ai/mcp-server#api-key-authentication) and configure credentials privately through Cursor's supported connection settings; use OAuth only if offered/supported by the endpoint. Ask “List my Mobilerun devices” to check access without creating resources or starting billed tasks. An empty list is valid. File installation is not proof of authentication or tool access.
+The server URL is `https://cloud.mobilerun.ai/api/mcp`; there are no bundled API keys, tokens, or client secrets. Follow [Mobilerun's browser OAuth instructions](https://docs.mobilerun.ai/mcp-server#oauth-authentication) through Cursor's connection interface. Actual Cursor login remains unverified; if the required flow is unavailable, report the limitation. Ask “List my Mobilerun devices” to check access without creating resources or starting billed tasks. An empty list is valid. File installation is not proof of authentication or tool access.
 
 ## Public submission
 

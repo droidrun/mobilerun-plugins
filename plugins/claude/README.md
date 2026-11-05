@@ -6,9 +6,9 @@ Connect Claude chat to Mobilerun's hosted MCP to work with Android devices and a
 
 This is a source bundle, not a published directory listing. Follow the repository's [archive build and validation instructions](../../README.md#check-locally) to create `mobilerun-claude.zip` containing only this package.
 
-The archive must have `.claude-plugin/plugin.json` at its root, or inside a single top-level folder. Do not zip the whole repository. In Claude, choose **Customize > Plugins > Add > Upload plugin**, select the archive, and open the Mobilerun plugin's **Connectors** tab. Add/connect Mobilerun using the client's supported authentication mechanism. Browser OAuth at the configured public API URL is unverified; if required but unavailable, record BLOCKED. Team/Enterprise users may first need an Owner to add the connector.
+The archive must have `.claude-plugin/plugin.json` at its root, or inside a single top-level folder. Do not zip the whole repository. In Claude, choose **Customize > Plugins > Add > Upload plugin**, select the archive, and open the Mobilerun plugin's **Connectors** tab. Add/connect Mobilerun and follow the browser OAuth flow. Actual Claude login remains unverified; if the required flow is unavailable, record BLOCKED. Team/Enterprise users may first need an Owner to add the connector.
 
-Endpoint: `https://api.mobilerun.ai/v1/mcp`. Follow [Mobilerun's public authentication instructions](https://docs.mobilerun.ai/mcp-server#api-key-authentication). No API key belongs in the package or conversation. Configure authentication privately using the host's supported mechanism; use browser OAuth only if this endpoint advertises/supports it. Installing the plugin alone does not authorize access. A separate custom connector tests the MCP, not the bundled skill; inability to authenticate through that client's supported flow remains a blocker.
+Endpoint: `https://cloud.mobilerun.ai/api/mcp`. Follow [Mobilerun's documented OAuth instructions](https://docs.mobilerun.ai/mcp-server#oauth-authentication). No credentials belong in the package or conversation. Installing the plugin alone does not authorize access. A separate custom connector tests the MCP, not the bundled skill; inability to authenticate through that client's supported flow remains a blocker.
 
 ## Use it
 

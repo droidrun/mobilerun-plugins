@@ -27,7 +27,7 @@ class ClaudeBundleTests(unittest.TestCase):
     def test_remote_oauth_configuration(self):
         config = json.loads(self.read('.mcp.json'))
         self.assertEqual(config, {'mcpServers': {'mobilerun': {
-            'type': 'http', 'url': 'https://api.mobilerun.ai/v1/mcp'}}})
+            'type': 'http', 'url': 'https://cloud.mobilerun.ai/api/mcp'}}})
 
     def test_self_contained_declarative_package(self):
         self.assertTrue(PLUGIN.is_dir(), 'Installable plugin folder missing')
@@ -94,7 +94,7 @@ class OpenAIBundleTests(unittest.TestCase):
             '$schema': 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json',
             'mcpServers': {'mobilerun': {
                 'type': 'streamable-http',
-                'url': 'https://api.mobilerun.ai/v1/mcp'}}})
+                'url': 'https://cloud.mobilerun.ai/api/mcp'}}})
 
     def test_review_cases_use_supported_profile_tools(self):
         review = json.loads(self.read('plugin.json'))['extensions']['com.openai']['review']
@@ -181,7 +181,7 @@ class MarketplaceArtifactTests(unittest.TestCase):
         self.assertRegex(manifest['version'], r'^\d+\.\d+\.\d+$')
         self.assertEqual(json.loads((package / '.mcp.json').read_text()), {
             'mcpServers': {'mobilerun': {
-                'url': 'https://api.mobilerun.ai/v1/mcp',
+                'url': 'https://cloud.mobilerun.ai/api/mcp',
                 'transport': 'streamable-http'}}})
         self.assertEqual((package / 'LICENSE').read_text(), (ROOT / 'LICENSE').read_text())
         files = set()
@@ -205,7 +205,7 @@ class MarketplaceArtifactTests(unittest.TestCase):
             config = json.loads(archive.read('mcp.json'))
             self.assertEqual(len(config['mcpServers']), 1)
             self.assertEqual(config['mcpServers']['mobilerun']['url'],
-                             'https://api.mobilerun.ai/v1/mcp')
+                             'https://cloud.mobilerun.ai/api/mcp')
 
     def test_cursor_package_is_self_contained_and_credential_free(self):
         package = ROOT / 'plugins/cursor'
@@ -217,7 +217,7 @@ class MarketplaceArtifactTests(unittest.TestCase):
         self.assertTrue((package / 'README.md').is_file())
         self.assertTrue((package / manifest['logo']).is_file())
         self.assertEqual(json.loads((package / 'mcp.json').read_text()), {
-            'mcpServers': {'mobilerun': {'url': 'https://api.mobilerun.ai/v1/mcp'}}})
+            'mcpServers': {'mobilerun': {'url': 'https://cloud.mobilerun.ai/api/mcp'}}})
         for path in package.rglob('*'):
             self.assertFalse(path.is_symlink())
             self.assertTrue(path.resolve().is_relative_to(package.resolve()))

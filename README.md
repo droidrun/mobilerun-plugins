@@ -11,7 +11,7 @@ Thin Mobilerun integration packages organized by agent provider. Each package co
 | Mobilerun | Cursor | [Cursor-native package and local installation](plugins/cursor/README.md) |
 | Mobilerun | OpenClaw | [Compatible MCP bundle and publication preflight](plugins/openclaw/README.md) |
 
-All packages include a hosted MCP connection reference. Claude and OpenAI also include provider-specific onboarding for connection problems and included credits. Packages do not grant credits, implement device workflows, or bundle API keys or other credentials. Connecting to the hosted MCP may require credentials configured privately through the host.
+All packages include a hosted MCP connection reference at `https://cloud.mobilerun.ai/api/mcp`. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication) for this endpoint; actual host login remains unverified. Claude and OpenAI also include provider-specific onboarding for connection problems and included credits. Packages do not grant credits, implement device workflows, or bundle credentials.
 
 ## Repository convention
 
