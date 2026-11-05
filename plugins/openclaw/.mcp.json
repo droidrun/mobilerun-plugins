@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mobilerun": {
+      "url": "https://cloud.mobilerun.ai/api/mcp",
+      "transport": "streamable-http"
+    }
+  }
+}
