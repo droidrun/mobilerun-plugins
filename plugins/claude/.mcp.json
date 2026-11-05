@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mobilerun": {
+      "type": "http",
+      "url": "https://api.mobilerun.ai/v1/mcp"
+    }
+  }
+}

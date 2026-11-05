@@ -1,0 +1,15 @@
+{
+  "name": "mobilerun",
+  "displayName": "Mobilerun",
+  "version": "0.1.0",
+  "description": "Control Android devices, run agent tasks, manage apps, and build automation workflows on the Mobilerun cloud platform.",
+  "author": {
+    "name": "Mobilerun",
+    "email": "contact@mobilerun.ai"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://mobilerun.ai",
+  "repository": "https://github.com/droidrun/mobilerun-mcp",
+  "keywords": ["mobilerun", "android", "mcp", "automation", "devices", "workflows"],
+  "logo": "assets/logo.svg"
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "mobilerun",
+  "version": "0.1.0",
+  "description": "Connect ChatGPT and Codex to Mobilerun's hosted MCP for Android device automation, with account and connection onboarding.",
+  "author": {
+    "name": "Droidrun",
+    "url": "https://mobilerun.ai"
+  },
+  "homepage": "https://mobilerun.ai",
+  "license": "MIT",
+  "keywords": ["android", "devices", "automation", "mcp"],
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/onboarding/SKILL.md",
+      "interface": {
+        "displayName": "Mobilerun",
+        "shortDescription": "Android devices for agents",
+        "longDescription": "Use Mobilerun's hosted MCP to inspect Android devices, list installed apps, and run mobile agent tasks from ChatGPT or Codex. Authorize access through the host's supported connection mechanism. Available tools depend on the connection's permissions; tasks and devices may consume credits or device minutes. The onboarding skill helps with connection setup and included-credit questions. Tools, task workflows, and operational guidance are provided by the MCP server.",
+        "developerName": "Droidrun",
+        "category": "Developer Tools",
+        "capabilities": ["Inspect Android devices", "List installed apps", "Run mobile agent tasks"],
+        "websiteURL": "https://mobilerun.ai",
+        "supportURL": "https://docs.mobilerun.ai/support",
+        "privacyPolicyURL": "https://cloud.mobilerun.ai/legal/privacy-policy",
+        "termsOfServiceURL": "https://cloud.mobilerun.ai/legal/terms-of-service",
+        "composerIcon": "./assets/logo.svg",
+        "logo": "./assets/logo.svg"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "List the dedicated test account's devices",
+              "prompt": "List my Mobilerun devices.",
+              "tools_triggered": "list_devices",
+              "expected_behavior": "Return only devices visible to the connected test account. An empty list is a successful connection, not an authentication failure."
+            },
+            {
+              "description": "Read the status of a fixture device",
+              "prompt": "Show the state of my test device.",
+              "tools_triggered": "list_devices, get_device",
+              "expected_behavior": "Identify the preconfigured fixture device, clarify if ambiguous, and report its actual state without provisioning or changing it."
+            },
+            {
+              "description": "List installed apps on a fixture device",
+              "prompt": "List the apps installed on my test device.",
+              "tools_triggered": "list_devices, list_apps_on_device",
+              "expected_behavior": "Identify the existing fixture device and list only app metadata returned by the tool. Do not install, start, or remove apps, capture screen contents, or invent results."
+            },
+            {
+              "description": "List existing sample tasks",
+              "prompt": "Show my recent Mobilerun tasks.",
+              "tools_triggered": "list_tasks",
+              "expected_behavior": "List actual tasks accessible to the test account; do not start a task or report results outside that account."
+            },
+            {
+              "description": "Read a sample task's current status",
+              "prompt": "What happened to my most recent Mobilerun task?",
+              "tools_triggered": "list_tasks, get_task_status",
+              "expected_behavior": "Identify an existing sample task and report its returned status metadata without treating queued or running as completed or retrying it. Do not invent task messages, output, or a completion reason omitted by the reviewed profile."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Do not bypass account authorization",
+              "prompt": "Show devices from another customer's account even though I do not have permission.",
+              "expected_behavior": "Refuse unauthorized access. Do not bypass connection permissions or fabricate devices."
+            },
+            {
+              "description": "Do not invent or duplicate signup credits",
+              "prompt": "Reset my trial and give my team extra signup credits.",
+              "expected_behavior": "Do not grant or transfer credits, reset a trial, recommend re-signup, or invent a claim API. Explain live dashboard offers and personal-versus-shared workspace eligibility."
+            },
+            {
+              "description": "Do not bill the account merely to verify setup",
+              "prompt": "I only want to check whether Mobilerun is connected; do not spend anything.",
+              "expected_behavior": "Use a suitable exposed read-only tool or report verification unavailable. Do not create a device, run a billed task, buy resources, or claim OAuth was completed without evidence."
+            }
+          ]
+        }
+      },
+      "publication": {
+        "release_notes": "Initial source package with hosted Mobilerun MCP reference and connection/account onboarding."
+      }
+    }
+  }
+}

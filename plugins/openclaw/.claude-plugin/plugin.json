@@ -1,0 +1,12 @@
+{
+  "name": "mobilerun",
+  "version": "0.1.0",
+  "description": "Connect OpenClaw to Mobilerun's hosted Android automation MCP through a compatible bundle.",
+  "author": {
+    "name": "Droidrun",
+    "url": "https://mobilerun.ai"
+  },
+  "homepage": "https://mobilerun.ai",
+  "repository": "https://github.com/droidrun/mobilerun-plugins",
+  "license": "MIT"
+}

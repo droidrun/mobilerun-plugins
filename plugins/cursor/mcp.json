@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "mobilerun": {
+      "url": "https://api.mobilerun.ai/v1/mcp"
+    }
+  }
+}
