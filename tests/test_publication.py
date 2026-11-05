@@ -46,6 +46,11 @@ class PublicationSafetyTests(unittest.TestCase):
         self.assertFalse((ROOT / '.superpowers').exists())
         self.assertFalse(list((ROOT / 'docs').rglob('local-preflight-*.md')))
 
+    def test_future_work_plans_are_not_published(self):
+        self.assertFalse(list((ROOT / 'docs' / 'marketplace-testing').rglob('*')))
+        for path in [ROOT / 'README.md', *(ROOT / 'plugins').rglob('*.md')]:
+            self.assertNotIn('docs/marketplace-testing/', path.read_text())
+
     def test_upload_archives_exclude_private_material_and_match_sources(self):
         for provider in ('claude', 'openai', 'openclaw'):
             with self.subTest(provider=provider):

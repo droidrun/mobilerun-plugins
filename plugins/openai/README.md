@@ -41,20 +41,10 @@ Follow the repository's [archive build and validation instructions](../../README
 
 Upload **only this package** through [OpenAI Plugins](https://platform.openai.com/plugins), using **With MCP**. Include MCP in the initial upload; adding MCP to a previously skills-only plugin is not supported. The portal accepts only one connected MCP server per plugin. Do not include repo marketplace files, app references, lifecycle hooks, credentials, or the Claude package in this ZIP.
 
-Before submitting for review, the publisher must separately:
-
-- Confirm organization/project ownership, submission permission, verified developer identity, and the portal category. The bundled publisher text is not proof of identity verification.
-- Complete the exact domain challenge shown by the portal without replacing another plugin's token.
-- Verify saved OAuth settings and complete the connection and tool scan. The bundle does not register or authorize an account itself.
-- Supply a dedicated working reviewer account privately through **Review details**, with sample data, a ready fixture device, and existing tasks. Never put reviewer credentials in the ZIP. Ensure the account does not require reviewer-side MFA/code approval or private-network access.
-- Run all **five positive and three negative cases** in `plugin.json` against that account, adapting fixture references to actual accessible data. Cases are proposed, not claimed executed, and no spend is automatically authorized by including them.
-- Record a reviewer-accessible walkthrough and supply its real URL. `review.demo_recording_url` is deliberately omitted rather than filled with a fake link.
-- Resolve required metadata, skill, connection, security, and tool-scan findings; submit only after testing. No country targeting or legal attestations are invented here.
+Developer/domain verification, authentication checks, and marketplace review are separate from package installation. Follow the provider's current submission requirements; this source package does not establish approval.
 
 ## Verification boundaries
 
-Use the [marketplace runbook](../../docs/marketplace-testing/openai.md) for all eight cases and the [video storyboard](../../docs/marketplace-testing/openai-video.md) for initial MCP review. The script is prepared; the actual recording and authenticated results are pending. The reviewed profile omits screenshot capture; the positive cases use device/app/task metadata instead.
-
-Repository tests check package structure, portable metadata, endpoint, onboarding path, square SVG asset, license, marketplace resolution, and linked documentation. They do not prove OAuth, deployment entitlements, skill behavior in ChatGPT, or portal acceptance. Manual scenarios should cover disconnected tools, successful empty devices, permission denial, 402/minute exhaustion, network failure, already-claimed bonus, personal/shared context, and already-connected tasks. No public submission, domain change, account creation, or purchase is performed by this package.
+Repository tests check package structure, portable metadata, endpoint, onboarding path, square SVG asset, license, marketplace resolution, and linked documentation. They do not prove OAuth, deployment entitlements, skill behavior in ChatGPT, or portal acceptance. The manifest's review cases are proposed package metadata, not executed results. No public submission, domain change, account creation, or purchase is performed by this package.
 
 Official references: [package format and local marketplaces](https://developers.openai.com/plugins/build/plugins), [submission and review fields](https://developers.openai.com/plugins/deploy/submission), [plugin guidelines](https://developers.openai.com/plugins/plugin-guidelines).

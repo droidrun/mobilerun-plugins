@@ -31,8 +31,6 @@ Claude sends the tool arguments needed for your requested operations to Mobileru
 
 ## Verification
 
-The [marketplace runbook](../../docs/marketplace-testing/claude.md) provides three prompt candidates and an every-advertised-tool testing procedure. Actual Claude runs are pending. Reviewed profiles omit screenshot capture and restrict some results to metadata; verify the live tool inventory rather than assuming full MCP access.
-
 From the repository root:
 
 ```bash
@@ -41,21 +39,6 @@ claude plugin validate plugins/claude
 ```
 
 The first command checks package structure, JSON, metadata, and license inclusion. It does not prove agent behavior or live OAuth. The second requires an installed Claude CLI. For local Claude Code loading, use `claude --plugin-dir ./plugins/claude`; this is not a substitute for chat testing.
-
-Manual acceptance scenarios (run in an actual Claude chat account):
-
-| Scenario | Expected |
-| --- | --- |
-| Disconnected plugin | Connectors-tab guidance; user completes browser OAuth. |
-| New eligible user | Check live plan/credits and shown verification steps; no invented claim button. |
-| Offer already used | No duplicate grant, reset, or re-signup workaround. |
-| Personal vs shared workspace | Explain balance context; no automatic switching or transfer. |
-| Empty devices | Connection succeeds; do not restart login. |
-| Already connected | Continue user's goal using MCP guidance, without repeating signup. |
-| Expired authorization | Reconnect through host UI. |
-| Permission denied | Check scope/account; do not bypass access controls. |
-| Insufficient credits | Check billing, not OAuth; no automatic purchase. |
-| Network failure | Report outage; avoid signup loops or duplicate writes. |
 
 Live Claude chat installation, OAuth, billing entitlements, and Anthropic portal validation require separate verification; local checks do not establish directory approval.
 

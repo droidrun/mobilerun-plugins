@@ -28,8 +28,6 @@ See the [provider overview](docs/providers.md) for package formats and verificat
 
 ## Check locally
 
-The [marketplace testing pack](docs/marketplace-testing/README.md) contains OpenAI review cases and video preparation, Claude prompts and tool coverage, Cursor local checks, and Grok Bot local/in-app checks. Prepared instructions are not evidence of executed tests.
-
 No dependency installation or compilation is needed. ZIPs are generated locally and are not committed. From the repository root, build them before running the tests; repeat this after changing any package file:
 
 ```bash

@@ -226,29 +226,17 @@ class MarketplaceArtifactTests(unittest.TestCase):
                 self.assertNotIn(path.name, {'.DS_Store', '.env'})
 
 
-class MarketplaceTestingDocsTests(unittest.TestCase):
-    def test_runbooks_and_relative_links(self):
-        directory = ROOT / 'docs/marketplace-testing'
-        required = {'README.md', 'openai.md', 'openai-video.md', 'claude.md',
-                    'cursor.md', 'grok-bot.md', 'run-template.md'}
-        self.assertTrue(required <= {p.name for p in directory.glob('*.md')})
-        paths = list(directory.glob('*.md'))
-        paths += [ROOT / f'plugins/{provider}/README.md'
-                  for provider in ('openai', 'claude')]
+class DocumentationTests(unittest.TestCase):
+    def test_relative_links(self):
+        paths = [ROOT / 'README.md']
+        paths += list((ROOT / 'docs').rglob('*.md'))
+        paths += list((ROOT / 'plugins').rglob('*.md'))
         for path in paths:
             for target in re.findall(r'\]\(([^)]+)\)', path.read_text()):
                 if '://' in target or target.startswith('#'):
                     continue
                 self.assertTrue((path.parent / target.split('#')[0]).exists(),
                                 f'Broken link from {path}: {target}')
-
-    def test_openai_runbook_matches_manifest_prompts(self):
-        manifest = json.loads((ROOT / 'plugins/openai/plugin.json').read_text())
-        cases = manifest['extensions']['com.openai']['review']['test_cases']
-        runbook = (ROOT / 'docs/marketplace-testing/openai.md').read_text()
-        for case in cases['positive'] + cases['negative']:
-            self.assertIn(case['prompt'], runbook)
-
 
 if __name__ == '__main__':
     unittest.main()
