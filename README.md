@@ -1,6 +1,6 @@
 # Mobilerun plugins
 
-Mobilerun integration packages organized by agent provider. The provider packages connect to the public MCP. Test Plugin is the separate local development connection.
+Mobilerun integration packages organized by agent provider. The provider packages connect to the public MCP. Development connections are isolated from production packages.
 
 ## Available now
 
@@ -15,6 +15,12 @@ All providers include the same two practical skills: `onboarding` for host conne
 
 ## Test package
 
+The **standard cross-host MCP test setup** lives in [`testing/mcp/`](testing/mcp/README.md): a credential bridge, explicit opt-in temporary HTTPS tunnel, transport checks, and separate remote ChatGPT and Claude test ZIP builders. Its regression tests run in the normal suite with fake credentials and loopback servers. They never start Docker or a public tunnel. Runtime URLs and credentials are not committed.
+
+Use `python3 testing/mcp/setup.py --help` for the test lifecycle and `python3 testing/mcp/package_plugins.py --help` for remote ZIP generation. ChatGPT Work was reported working with this setup; regular-chat tool attachment and native Claude use remain separate host checks. Public exposure is never automatic.
+
+The optional local-only fallback remains separate:
+
 [Test Plugin](plugins/test-plugin/README.md) version 0.3.0 connects through a local Node.js stdio bridge to `http://localhost:8080/mcp/openai`. It requires a compatible desktop-local execution environment, Node.js 20.3 or later, the local MCP server, and an API key stored outside the plugin. Use a maintained Node.js release. Its ZIP is generated under the Git-ignored `zip/` directory. This is not the cloud OAuth connector and does not enable localhost access from regular cloud-backed ChatGPT chats; authenticated host execution and live streaming must be verified separately.
 
 The device-streaming experiment is isolated in a separate worktree on branch `mcp-device-streaming`; it is not included in this branch's plugin packages or ZIP exports.
@@ -26,6 +32,7 @@ plugins/<provider>/            # self-contained installable package
 .agents/plugins/marketplace.json # OpenAI repo-local testing catalog
 docs/providers.md              # provider targets, routes, and evidence
 tests/                         # local package validation
+testing/mcp/                   # standard bridge/tunnel test setup and remote ZIP builders
 ```
 
 Add providers directly under `plugins/`; no `projects/mobilerun` nesting. Each provider folder owns its required manifest/configuration, README, license, and optional skills. Choose the native provider format rather than copying a Claude manifest into another provider. Avoid symlinks or references outside the installable folder. Add shared tooling only after actual packages need it. See [package boundaries and account guidance](plugins/README.md).
