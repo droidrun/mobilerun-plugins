@@ -4,6 +4,8 @@ A compatible MCP-only bundle for OpenClaw. This is a **Claude-format bundle cons
 
 The root `.mcp.json` declares one hosted server at `https://cloud.mobilerun.ai/api/mcp`, explicitly using `streamable-http` rather than the default SSE transport. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication) for this endpoint; use the host's connection flow and do not put credentials in the bundle or chat. OpenClaw runtime authentication remains unverified. Tools, prompts, permissions, and task execution remain on the MCP server. Available tools depend on the authenticated connection and server profile.
 
+The dedicated `/api/mcp/openclaw` profile is deferred: that public route and its OAuth metadata returned 404 during verification. This package retains the existing base endpoint until the OpenClaw profile is added; it does not substitute another provider's profile.
+
 ## Validate and preview publication
 
 From the repository root, with Node.js 22.13+ on the 22.x line or Node.js 24+:

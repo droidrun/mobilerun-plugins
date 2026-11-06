@@ -1,0 +1,25 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "test-plugin",
+  "version": "0.2.0",
+  "description": "Test Mobilerun through the public MCP OpenAI profile with browser OAuth. No local MCP runtime or account API-key configuration.",
+  "author": { "name": "Droidrun", "url": "https://mobilerun.ai" },
+  "homepage": "https://mobilerun.ai",
+  "license": "MIT",
+  "keywords": ["mobilerun", "mcp", "oauth", "openai", "testing"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Test Plugin",
+        "shortDescription": "Public OpenAI MCP profile with OAuth",
+        "longDescription": "Connect to Mobilerun's public OpenAI-profile MCP endpoint and authorize through browser OAuth. No Node.js, local server, or manually supplied account API key is required. Local package installation does not make tool execution local.",
+        "developerName": "Droidrun",
+        "category": "Developer Tools",
+        "websiteURL": "https://mobilerun.ai",
+        "supportURL": "https://docs.mobilerun.ai/support",
+        "privacyPolicyURL": "https://cloud.mobilerun.ai/legal/privacy-policy",
+        "termsOfServiceURL": "https://cloud.mobilerun.ai/legal/terms-of-service"
+      }
+    }
+  }
+}

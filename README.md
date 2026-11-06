@@ -1,6 +1,6 @@
 # Mobilerun plugins
 
-Thin Mobilerun integration packages organized by agent provider. Each package connects to the existing MCP; tools and operational guidance stay on the server.
+Mobilerun integration packages organized by agent provider. The active packages connect to the public MCP; Test Plugin explicitly selects its OpenAI profile with browser OAuth.
 
 ## Available now
 
@@ -11,7 +11,13 @@ Thin Mobilerun integration packages organized by agent provider. Each package co
 | Mobilerun | Cursor | [Cursor-native package and local installation](plugins/cursor/README.md) |
 | Mobilerun | OpenClaw | [Compatible MCP bundle and publication preflight](plugins/openclaw/README.md) |
 
-All packages include a hosted MCP connection reference at `https://cloud.mobilerun.ai/api/mcp`. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication) for this endpoint; actual host login remains unverified. Claude and OpenAI also include provider-specific onboarding for connection problems and included credits. Packages do not grant credits, implement device workflows, or bundle credentials.
+Claude selects `https://cloud.mobilerun.ai/api/mcp/claude`; OpenAI selects `https://cloud.mobilerun.ai/api/mcp/openai`. Cursor and OpenClaw retain `https://cloud.mobilerun.ai/api/mcp` until their dedicated profiles are available. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication); actual host login remains unverified. Claude and OpenAI also include provider-specific onboarding for connection problems and included credits. These packages do not grant credits, implement device workflows, or bundle credentials.
+
+## Test package
+
+[Test Plugin](plugins/test-plugin/README.md) is listed in the local marketplace and connects to `https://cloud.mobilerun.ai/api/mcp/openai` using browser OAuth. No local MCP process, Node.js, or account API-key setup is required. Its ZIP is generated under the Git-ignored `zip/` directory; completed OAuth, the deployed authenticated tool list, and live streaming remain unverified.
+
+The device-streaming experiment is isolated in a separate worktree on branch `mcp-device-streaming`; it is not included in this branch's plugin packages or ZIP exports.
 
 ## Repository convention
 
@@ -28,25 +34,10 @@ See the [provider overview](docs/providers.md) for package formats and verificat
 
 ## Check locally
 
-No dependency installation or compilation is needed. ZIPs are generated locally and are not committed. From the repository root, build them before running the tests; repeat this after changing any package file:
+These public-MCP packages need no dependency installation or compilation. ZIPs are generated locally and are not committed. From the repository root, refresh all five archives before running the tests:
 
 ```bash
-python3 - <<'PY'
-from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile
-
-for provider in ('claude', 'openai', 'openclaw'):
-    package = Path('plugins') / provider
-    files = sorted(package.rglob('*'))
-    if any(path.is_symlink() for path in files):
-        raise SystemExit(f'Refusing symlink in {package}')
-    target = Path(f'mobilerun-{provider}.zip')
-    with ZipFile(target, 'w', compression=ZIP_DEFLATED) as archive:
-        for path in files:
-            if path.is_file():
-                archive.writestr(path.relative_to(package).as_posix(), path.read_bytes())
-    print(target)
-PY
+python3 scripts/package_plugins.py
 ```
 
 Then validate the generated artifacts and source:
@@ -56,7 +47,9 @@ python3 -B -m unittest discover -s tests -v
 claude plugin validate plugins/claude
 ```
 
-The Claude command requires its CLI. Static checks validate the bundle's shape, not live OAuth, agent decisions, or marketplace acceptance. Follow each package README for upload packaging and manual scenarios. Every file under a provider package is shipped; do not put credentials or development scratch files there.
+All archives are written to Git-ignored `zip/`. The existing root-level Claude, OpenAI and OpenClaw archive paths are refreshed as identical compatibility copies. The exporter uses explicit file lists, so it does not ship development dependencies, local runtimes, or secrets.
+
+The Claude command requires its CLI. Static checks validate the bundle's shape, not live OAuth, agent decisions, or marketplace acceptance. Follow each package README for upload packaging and manual scenarios. Hosted provider folders ship directly; experimental source/build packages use an explicit runtime-file allowlist. Never put credentials or development scratch files in an upload.
 
 ## Distribution
 
@@ -64,7 +57,7 @@ Review the [public-content checklist](docs/publication.md) before sharing reposi
 
 For Claude chat, upload a ZIP of the provider folder to test privately. A public directory listing requires separate plugin-bundle and MCP connector submissions, which can be paired under the same organization and endpoint. No publishing is performed by this repository's tests.
 
-For OpenAI, the repo-local marketplace points only to `plugins/openai`. Use the ChatGPT desktop app for full local-package testing, or connect the hosted MCP separately in ChatGPT web. Public ZIP submission, domain verification, OAuth/tool scans, reviewer access, and recorded test evidence are separate steps.
+For OpenAI, the repo-local marketplace includes the existing hosted `plugins/openai` and the separate public-profile `plugins/test-plugin`. Use the ChatGPT desktop app for local-package testing, or connect the hosted MCP separately in ChatGPT web. Installing a package locally does not make its MCP execution local. Public ZIP submission, identity/domain verification, authentication/tool scans, reviewer access, and recorded test evidence are separate steps.
 
 ## License
 

@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 import unittest
 import zipfile
+from source_files import source_files
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,10 +34,10 @@ class PublicationSafetyTests(unittest.TestCase):
             self.assertFalse(bool(pattern.search(content)), f'{label}: {category}')
 
     def test_public_text_excludes_private_material(self):
-        files = [ROOT / 'README.md']
-        for directory in ('plugins', 'docs', '.agents', '.cursor-plugin'):
-            files.extend(p for p in (ROOT / directory).rglob('*')
-                         if p.is_file() and p.suffix in {'.md', '.json', '.svg'})
+        files = [p for p in source_files(ROOT)
+                 if p == ROOT / 'README.md' or (
+                     p.relative_to(ROOT).parts[0] in {'plugins', 'docs', '.agents', '.cursor-plugin'}
+                     and p.suffix in {'.md', '.json', '.svg', '.ts', '.tsx', '.mjs', '.css', '.html'})]
         for path in files:
             with self.subTest(file=str(path.relative_to(ROOT))):
                 self.check_content(str(path.relative_to(ROOT)), path.read_text())
@@ -48,7 +49,8 @@ class PublicationSafetyTests(unittest.TestCase):
 
     def test_future_work_plans_are_not_published(self):
         self.assertFalse(list((ROOT / 'docs' / 'marketplace-testing').rglob('*')))
-        for path in [ROOT / 'README.md', *(ROOT / 'plugins').rglob('*.md')]:
+        for path in [p for p in source_files(ROOT) if p.suffix == '.md'
+                     and (p == ROOT / 'README.md' or p.relative_to(ROOT).parts[0] == 'plugins')]:
             self.assertNotIn('docs/marketplace-testing/', path.read_text())
 
     def test_upload_archives_exclude_private_material_and_match_sources(self):

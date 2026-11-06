@@ -27,7 +27,7 @@ class ClaudeBundleTests(unittest.TestCase):
     def test_remote_oauth_configuration(self):
         config = json.loads(self.read('.mcp.json'))
         self.assertEqual(config, {'mcpServers': {'mobilerun': {
-            'type': 'http', 'url': 'https://cloud.mobilerun.ai/api/mcp'}}})
+            'type': 'http', 'url': 'https://cloud.mobilerun.ai/api/mcp/claude'}}})
 
     def test_self_contained_declarative_package(self):
         self.assertTrue(PLUGIN.is_dir(), 'Installable plugin folder missing')
@@ -94,7 +94,7 @@ class OpenAIBundleTests(unittest.TestCase):
             '$schema': 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json',
             'mcpServers': {'mobilerun': {
                 'type': 'streamable-http',
-                'url': 'https://cloud.mobilerun.ai/api/mcp'}}})
+                'url': 'https://cloud.mobilerun.ai/api/mcp/openai'}}})
 
     def test_review_cases_use_supported_profile_tools(self):
         review = json.loads(self.read('plugin.json'))['extensions']['com.openai']['review']
@@ -148,8 +148,7 @@ class OpenAIBundleTests(unittest.TestCase):
         path = ROOT / '.agents/plugins/marketplace.json'
         self.assertTrue(path.is_file(), 'Missing OpenAI local marketplace')
         marketplace = json.loads(path.read_text())
-        self.assertEqual(len(marketplace['plugins']), 1)
-        entry = marketplace['plugins'][0]
+        entry = next(item for item in marketplace['plugins'] if item['name'] == 'mobilerun')
         self.assertEqual(entry['source'], {'source': 'local', 'path': './plugins/openai'})
         self.assertTrue((ROOT / entry['source']['path'] / 'plugin.json').is_file())
         self.assertEqual(entry['policy']['authentication'], 'ON_INSTALL')
@@ -205,7 +204,7 @@ class MarketplaceArtifactTests(unittest.TestCase):
             config = json.loads(archive.read('mcp.json'))
             self.assertEqual(len(config['mcpServers']), 1)
             self.assertEqual(config['mcpServers']['mobilerun']['url'],
-                             'https://cloud.mobilerun.ai/api/mcp')
+                             'https://cloud.mobilerun.ai/api/mcp/openai')
 
     def test_cursor_package_is_self_contained_and_credential_free(self):
         package = ROOT / 'plugins/cursor'
@@ -228,9 +227,9 @@ class MarketplaceArtifactTests(unittest.TestCase):
 
 class DocumentationTests(unittest.TestCase):
     def test_relative_links(self):
-        paths = [ROOT / 'README.md']
-        paths += list((ROOT / 'docs').rglob('*.md'))
-        paths += list((ROOT / 'plugins').rglob('*.md'))
+        from source_files import source_files
+        paths = [p for p in source_files(ROOT) if p.suffix == '.md'
+                 and (p == ROOT / 'README.md' or p.relative_to(ROOT).parts[0] in {'docs', 'plugins'})]
         for path in paths:
             for target in re.findall(r'\]\(([^)]+)\)', path.read_text()):
                 if '://' in target or target.startswith('#'):

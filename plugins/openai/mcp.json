@@ -3,7 +3,7 @@
   "mcpServers": {
     "mobilerun": {
       "type": "streamable-http",
-      "url": "https://cloud.mobilerun.ai/api/mcp"
+      "url": "https://cloud.mobilerun.ai/api/mcp/openai"
     }
   }
 }

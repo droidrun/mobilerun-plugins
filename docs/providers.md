@@ -24,6 +24,19 @@ Official documentation checked November 5, 2026:
 
 Official [packaging](https://developers.openai.com/plugins/build/plugins) and [submission](https://developers.openai.com/plugins/deploy/submission) docs checked November 5, 2026 support portable root `plugin.json`, `mcp.json` with `streamable-http`, and `extensions.com.openai.onboardingSkill`. The bundle has listing links, the existing Mobilerun logo, and five positive/three negative proposed review cases. Cases have not been run against a reviewer account.
 
-The packages target `https://cloud.mobilerun.ai/api/mcp`. Mobilerun documents [OAuth auto-discovery and browser authentication](https://docs.mobilerun.ai/mcp-server#oauth-authentication) for this endpoint. Connect through the host's OAuth flow; actual login in each host remains unverified. Do not put credentials in distributed bundles or chat. The canonical portable MCP schema disallows per-server `extensions`, although OpenAI documents an auth extension there. Advanced overrides require checking the portal's accepted schema. Missing required authentication support remains a review blocker; do not use `none` for this protected endpoint.
+The OpenAI packages select `https://cloud.mobilerun.ai/api/mcp/openai`; Claude selects `/api/mcp/claude`. Cursor and OpenClaw retain the base `https://cloud.mobilerun.ai/api/mcp` pending their dedicated profiles. Mobilerun documents [OAuth auto-discovery and browser authentication](https://docs.mobilerun.ai/mcp-server#oauth-authentication). Connect through the host's OAuth flow; actual login in each host remains unverified. Do not put credentials in distributed bundles or chat. The canonical portable MCP schema disallows per-server `extensions`, although OpenAI documents an auth extension there. Advanced overrides require checking the portal's accepted schema. Missing required authentication support remains a review blocker; do not use `none` for this protected endpoint.
 
 The repo-local marketplace supports desktop authoring/testing. It does not publish to ChatGPT web or the public directory. A separate custom-MCP connection tests only the hosted server. Marketplace verification and approval are not established by these source packages.
+
+The separate [Test Plugin](../plugins/test-plugin/README.md) now explicitly targets `https://cloud.mobilerun.ai/api/mcp/openai`. Its version 0.2.0 replaces the earlier local stdio configuration with public-profile Streamable HTTP and OAuth discovery. It needs no local MCP runtime or manually configured API key. Profile-specific OAuth metadata is reachable; completed sign-in, the authenticated deployed tool list and live viewer behavior remain unverified.
+
+## Public profile routing
+
+| Package | Profile / endpoint suffix | Status |
+| --- | --- | --- |
+| Claude | `/api/mcp/claude` | Profile-specific unauthenticated OAuth discovery verified. |
+| OpenAI, Test Plugin | `/api/mcp/openai` | Profile-specific unauthenticated OAuth discovery verified. |
+| Cursor | `/api/mcp` retained | `/api/mcp/cursor` and its OAuth resource metadata returned 404; dedicated profile deferred. |
+| OpenClaw | `/api/mcp` retained | `/api/mcp/openclaw` and its OAuth resource metadata returned 404; dedicated profile deferred. |
+
+These checks do not establish authenticated tool access or UI compatibility. Cursor/OpenClaw are not silently mapped to another provider's profile; their existing base connection remains until those profiles are added.
