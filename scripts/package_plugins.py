@@ -1,5 +1,6 @@
 """Build all provider ZIPs from explicit distribution file lists."""
 from pathlib import Path
+import json
 import shutil
 import sys
 import tempfile
@@ -7,13 +8,21 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from scripts.package_test_plugin import package_plugin
+from scripts.sync_skills import check as check_shared_skills
 
+SKILL_FILES = tuple(f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks', 'workflow-automation'))
 FILES = {
-    'claude': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', 'skills/onboarding/SKILL.md'),
-    'openai': ('plugin.json', 'mcp.json', 'README.md', 'LICENSE', 'assets/logo.svg', 'skills/onboarding/SKILL.md'),
-    'cursor': ('.cursor-plugin/plugin.json', 'mcp.json', 'README.md', 'LICENSE', 'assets/logo.svg'),
-    'openclaw': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE'),
+    'claude': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', *SKILL_FILES),
+    'openai': ('plugin.json', 'mcp.json', 'README.md', 'LICENSE', 'assets/logo.svg', *SKILL_FILES),
+    'cursor': ('.cursor-plugin/plugin.json', 'mcp.json', 'README.md', 'LICENSE', 'assets/logo.svg', *SKILL_FILES),
+    'openclaw': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', *SKILL_FILES),
+}
+HOST = 'https://cloud.mobilerun.ai/api/mcp'
+CONNECTORS = {
+    'claude': {'type': 'http', 'url': HOST + '/claude'},
+    'openai': {'type': 'streamable-http', 'url': HOST + '/openai'},
+    'cursor': {'url': HOST},
+    'openclaw': {'transport': 'streamable-http', 'url': HOST},
 }
 
 
@@ -31,6 +40,13 @@ def export_provider(provider: str) -> Path:
         contents[name] = path.read_bytes()
         if not contents[name]:
             raise ValueError(f'Empty distribution file in {provider}: {name}')
+    config_name = '.mcp.json' if provider in ('claude', 'openclaw') else 'mcp.json'
+    config = json.loads(contents[config_name])
+    expected = {'mcpServers': {'mobilerun': CONNECTORS[provider]}}
+    if provider == 'openai':
+        expected['$schema'] = 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json'
+    if config != expected:
+        raise ValueError(f'Invalid hosted MCP configuration in {provider}: {config_name}')
     destination.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=destination.parent, prefix='.provider-', suffix='.zip', delete=False) as file:
         temporary = Path(file.name)
@@ -51,12 +67,12 @@ def export_provider(provider: str) -> Path:
 
 
 if __name__ == '__main__':
+    stale = check_shared_skills(ROOT, providers=FILES)
+    if stale:
+        raise SystemExit('Shared skills are out of sync; run python3 scripts/sync_skills.py')
     for provider in FILES:
         target = export_provider(provider)
         # Keep the existing ignored root-level archives in sync for compatibility.
         if provider in ('claude', 'openai', 'openclaw'):
             shutil.copyfile(target, ROOT / target.name)
         print(f'Built {target.relative_to(ROOT)}: {target.stat().st_size:,} bytes')
-    target = ROOT / 'zip/test-plugin.zip'
-    package_plugin(ROOT / 'plugins/test-plugin', target)
-    print(f'Built {target.relative_to(ROOT)}: {target.stat().st_size:,} bytes')

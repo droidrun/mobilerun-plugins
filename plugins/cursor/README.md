@@ -2,6 +2,8 @@
 
 Connect Cursor to the [Mobilerun](https://mobilerun.ai) hosted MCP for Android devices, tasks, apps, and automation. Actual tools depend on the connection's server profile and permissions. This package is not a verified Marketplace listing.
 
+The package includes three practical skills in the standard `skills/<name>/SKILL.md` layout: `onboarding` for connection and first-device setup, `mobile-tasks` for device/app control and bounded tasks, and `workflow-automation` for reusable actions and triggers. Tasks, devices, and recurring workflows can consume credits or minutes.
+
 ## Install locally
 
 Copy this entire directory, including `.cursor-plugin/`, `assets/`, and `LICENSE`, to `~/.cursor/plugins/local/mobilerun`. Do not link to a repository outside the local-plugin directory: Cursor skips those symlinks. Do not overwrite an existing installation without checking it first.
@@ -18,7 +20,7 @@ Use [Cursor Marketplace publishing](https://cursor.com/marketplace/publish) only
 
 ## Provenance and license
 
-Based on the Cursor plugin from [droidrun/mobilerun-mcp](https://github.com/droidrun/mobilerun-mcp). **MCP URL and README modified November 5, 2026** to use the public API endpoint and document installation and verification boundaries. The upstream Apache-2.0 license and attribution are retained; this package is not relicensed under the surrounding repository's MIT license.
+Based on the Cursor plugin from [droidrun/mobilerun-mcp](https://github.com/droidrun/mobilerun-mcp). The MCP URL and README were updated November 5, 2026 to use the public API endpoint and document installation and verification boundaries. Shared onboarding, mobile-tasks, and workflow-automation skills were added November 6, 2026. The upstream Apache-2.0 license and attribution are retained; this package is not relicensed under the surrounding repository's MIT license.
 
 Support: <https://github.com/droidrun/mobilerun-mcp/issues>
 

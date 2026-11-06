@@ -11,7 +11,7 @@ PACKAGES = {
     'cursor': ('mcp.json', None),
     'openai': ('mcp.json', 'openai'),
     'openclaw': ('.mcp.json', None),
-    'test-plugin': ('mcp.json', 'openai'),
+    'test-plugin': ('mcp.json', 'local'),
 }
 
 
@@ -22,10 +22,16 @@ class ProviderProfileTests(unittest.TestCase):
                 servers = json.loads((ROOT/'plugins'/package/config).read_text())['mcpServers']
                 self.assertEqual(len(servers), 1)
                 server = next(iter(servers.values()))
-                expected = 'https://cloud.mobilerun.ai/api/mcp' + (f'/{profile}' if profile else '')
-                self.assertEqual(server['url'], expected)
-                self.assertNotIn('command', server)
-                self.assertNotIn('headers', server)
+                if profile == 'local':
+                    self.assertEqual(server, {'type': 'stdio', 'command': 'node',
+                                              'args': ['${PLUGIN_ROOT}/scripts/local-mcp.mjs']})
+                    self.assertIn('http://localhost:8080/mcp/openai',
+                                  (ROOT/'plugins'/package/'scripts/local-mcp.mjs').read_text())
+                else:
+                    expected = 'https://cloud.mobilerun.ai/api/mcp' + (f'/{profile}' if profile else '')
+                    self.assertEqual(server['url'], expected)
+                    self.assertNotIn('command', server)
+                    self.assertNotIn('headers', server)
 
     def test_zip_exports_match_provider_connections(self):
         for package, (config, profile) in PACKAGES.items():
@@ -37,8 +43,15 @@ class ProviderProfileTests(unittest.TestCase):
                     self.assertIsNone(archive.testzip())
                     self.assertEqual(archive.read(config), (ROOT/'plugins'/package/config).read_bytes())
                     server = next(iter(json.loads(archive.read(config))['mcpServers'].values()))
-                    expected = 'https://cloud.mobilerun.ai/api/mcp' + (f'/{profile}' if profile else '')
-                    self.assertEqual(server['url'], expected)
+                    if profile == 'local':
+                        self.assertEqual(server['type'], 'stdio')
+                        self.assertEqual(server['args'], ['${PLUGIN_ROOT}/scripts/local-mcp.mjs'])
+                        self.assertEqual(archive.read('scripts/local-mcp.mjs'),
+                                         (ROOT/'plugins'/package/'scripts/local-mcp.mjs').read_bytes())
+                        self.assertIn(b'http://localhost:8080/mcp/openai', archive.read('scripts/local-mcp.mjs'))
+                    else:
+                        expected = 'https://cloud.mobilerun.ai/api/mcp' + (f'/{profile}' if profile else '')
+                        self.assertEqual(server['url'], expected)
 
 
 if __name__ == '__main__':

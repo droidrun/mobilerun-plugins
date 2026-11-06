@@ -2,8 +2,11 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
     "test-plugin": {
-      "type": "streamable-http",
-      "url": "https://cloud.mobilerun.ai/api/mcp/openai"
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "${PLUGIN_ROOT}/scripts/local-mcp.mjs"
+      ]
     }
   }
 }

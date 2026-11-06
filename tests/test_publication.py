@@ -1,6 +1,7 @@
 """Publication checks on distributable content, not on live account behavior."""
 from pathlib import Path
 import re
+import subprocess
 import unittest
 import zipfile
 from source_files import source_files
@@ -9,6 +10,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class PublicationSafetyTests(unittest.TestCase):
+    def test_local_artifacts_are_ignored_without_hiding_examples(self):
+        ignored = (
+            'reports/precommit-check.md', 'zip/example.zip', 'mobilerun-cursor.zip',
+            '.env', 'plugins/test-plugin/.env', 'plugins/test-plugin/.env.local',
+            '.config/mobilerun/local-mcp.json', 'local-mcp.json', 'credentials.json',
+        )
+        public = ('plugins/test-plugin/.env.example', 'shared/onboarding-first-device.md')
+        for name in (*ignored, *public):
+            with self.subTest(path=name):
+                result = subprocess.run(
+                    ['git', 'check-ignore', '--no-index', '-q', name],
+                    cwd=ROOT, capture_output=True,
+                )
+                self.assertIn(result.returncode, (0, 1))
+                self.assertEqual(result.returncode == 0, name in ignored)
+
     # Split example patterns so this public test does not contain a real private URL,
     # personal path, credential, or proprietary identifier itself.
     forbidden = {

@@ -1,12 +1,19 @@
-"""Export Test Plugin's hosted-profile package, excluding legacy local build files."""
+"""Export Test Plugin's runtime package with the local stdio bridge and no credentials."""
 import argparse
 from pathlib import Path
+import sys
 import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from scripts.sync_skills import check as check_shared_skills
+from scripts.sync_skills import _regular_file, _replace_section
 DISTRIBUTION_FILES = (
     'plugin.json', 'mcp.json', 'README.md', 'LICENSE',
+    'scripts/local-mcp.mjs', 'scripts/setup-local-auth.mjs',
+    'skills/onboarding/SKILL.md', 'skills/mobile-tasks/SKILL.md',
+    'skills/workflow-automation/SKILL.md',
 )
 
 
@@ -46,10 +53,36 @@ def package_plugin(package: Path, destination: Path) -> None:
         temporary.unlink(missing_ok=True)
 
 
-if __name__ == '__main__':
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--package', type=Path, default=ROOT / 'plugins/test-plugin')
     parser.add_argument('--output', type=Path, default=ROOT / 'zip/test-plugin.zip')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    try:
+        pending = check_shared_skills(ROOT)
+    except (OSError, ValueError) as error:
+        print(f'Shared skill check failed: {error}', file=sys.stderr)
+        return 1
+    if pending:
+        print('Shared skills are out of sync; run python3 scripts/sync_skills.py', file=sys.stderr)
+        return 1
+    try:
+        onboarding = _regular_file(args.package, 'skills/onboarding/SKILL.md').read_text()
+        canonical = _regular_file(ROOT, 'shared/onboarding-first-device.md').read_text()
+        if onboarding != _replace_section(onboarding, canonical, str(args.package)):
+            raise ValueError('Selected package shared skills are out of sync')
+        for skill in ('mobile-tasks', 'workflow-automation'):
+            content = _regular_file(args.package, f'skills/{skill}/SKILL.md').read_text()
+            expected = _regular_file(ROOT, f'shared/skills/{skill}/SKILL.md').read_text()
+            if content != expected:
+                raise ValueError('Selected package shared skills are out of sync')
+    except (OSError, ValueError) as error:
+        print(f'Shared skill check failed: {error}', file=sys.stderr)
+        return 1
     package_plugin(args.package, args.output)
     print(f'Built {args.output.name}: {len(DISTRIBUTION_FILES)} runtime files, {args.output.stat().st_size:,} bytes')
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

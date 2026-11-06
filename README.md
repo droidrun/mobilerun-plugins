@@ -1,6 +1,6 @@
 # Mobilerun plugins
 
-Mobilerun integration packages organized by agent provider. The active packages connect to the public MCP; Test Plugin explicitly selects its OpenAI profile with browser OAuth.
+Mobilerun integration packages organized by agent provider. The provider packages connect to the public MCP. Test Plugin is the separate local development connection.
 
 ## Available now
 
@@ -11,11 +11,11 @@ Mobilerun integration packages organized by agent provider. The active packages 
 | Mobilerun | Cursor | [Cursor-native package and local installation](plugins/cursor/README.md) |
 | Mobilerun | OpenClaw | [Compatible MCP bundle and publication preflight](plugins/openclaw/README.md) |
 
-Claude selects `https://cloud.mobilerun.ai/api/mcp/claude`; OpenAI selects `https://cloud.mobilerun.ai/api/mcp/openai`. Cursor and OpenClaw retain `https://cloud.mobilerun.ai/api/mcp` until their dedicated profiles are available. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication); actual host login remains unverified. Claude and OpenAI also include provider-specific onboarding for connection problems and included credits. These packages do not grant credits, implement device workflows, or bundle credentials.
+All providers include the same three practical skills: `onboarding` for host connection and first-device setup, `mobile-tasks` for device/app control and bounded agent tasks, and `workflow-automation` for reusable actions, triggers, and hosted-assistant conversations. Their MCP server tools perform the operations; tasks, devices, and recurring workflows can consume credits or minutes. Claude selects `https://cloud.mobilerun.ai/api/mcp/claude`; OpenAI selects `https://cloud.mobilerun.ai/api/mcp/openai`. Cursor and OpenClaw retain `https://cloud.mobilerun.ai/api/mcp` until their dedicated profiles are available. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication). Credentials are not bundled.
 
 ## Test package
 
-[Test Plugin](plugins/test-plugin/README.md) is listed in the local marketplace and connects to `https://cloud.mobilerun.ai/api/mcp/openai` using browser OAuth. No local MCP process, Node.js, or account API-key setup is required. Its ZIP is generated under the Git-ignored `zip/` directory; completed OAuth, the deployed authenticated tool list, and live streaming remain unverified.
+[Test Plugin](plugins/test-plugin/README.md) version 0.3.0 connects through a local Node.js stdio bridge to `http://localhost:8080/mcp/openai`. It requires a compatible desktop-local execution environment, Node.js 20.3 or later, the local MCP server, and an API key stored outside the plugin. Use a maintained Node.js release. Its ZIP is generated under the Git-ignored `zip/` directory. This is not the cloud OAuth connector and does not enable localhost access from regular cloud-backed ChatGPT chats; authenticated host execution and live streaming must be verified separately.
 
 The device-streaming experiment is isolated in a separate worktree on branch `mcp-device-streaming`; it is not included in this branch's plugin packages or ZIP exports.
 
@@ -34,10 +34,16 @@ See the [provider overview](docs/providers.md) for package formats and verificat
 
 ## Check locally
 
-These public-MCP packages need no dependency installation or compilation. ZIPs are generated locally and are not committed. From the repository root, refresh all five archives before running the tests:
+The production provider packages need no dependency installation or compilation. ZIPs are generated locally and are not committed. Build the four production archives independently of Test Plugin:
 
 ```bash
 python3 scripts/package_plugins.py
+```
+
+The local adapter and credential setup helper belong only to Test Plugin, not production. Build its separate archive explicitly before running the full repository test suite:
+
+```bash
+python3 scripts/package_test_plugin.py
 ```
 
 Then validate the generated artifacts and source:
@@ -47,7 +53,7 @@ python3 -B -m unittest discover -s tests -v
 claude plugin validate plugins/claude
 ```
 
-All archives are written to Git-ignored `zip/`. The existing root-level Claude, OpenAI and OpenClaw archive paths are refreshed as identical compatibility copies. The exporter uses explicit file lists, so it does not ship development dependencies, local runtimes, or secrets.
+All archives are written to Git-ignored `zip/`. The production exporter refreshes the existing root-level Claude, OpenAI and OpenClaw archive paths as identical compatibility copies. Explicit file lists exclude development dependencies and secrets. Only the separately built Test Plugin includes the local bridge and setup helper; its credential file remains outside the package.
 
 The Claude command requires its CLI. Static checks validate the bundle's shape, not live OAuth, agent decisions, or marketplace acceptance. Follow each package README for upload packaging and manual scenarios. Hosted provider folders ship directly; experimental source/build packages use an explicit runtime-file allowlist. Never put credentials or development scratch files in an upload.
 
@@ -57,7 +63,7 @@ Review the [public-content checklist](docs/publication.md) before sharing reposi
 
 For Claude chat, upload a ZIP of the provider folder to test privately. A public directory listing requires separate plugin-bundle and MCP connector submissions, which can be paired under the same organization and endpoint. No publishing is performed by this repository's tests.
 
-For OpenAI, the repo-local marketplace includes the existing hosted `plugins/openai` and the separate public-profile `plugins/test-plugin`. Use the ChatGPT desktop app for local-package testing, or connect the hosted MCP separately in ChatGPT web. Installing a package locally does not make its MCP execution local. Public ZIP submission, identity/domain verification, authentication/tool scans, reviewer access, and recorded test evidence are separate steps.
+For OpenAI, the repo-local marketplace includes the hosted `plugins/openai` and the separate local-development `plugins/test-plugin`. Test Plugin requires a desktop-local mode capable of launching its bridge; merely using the ChatGPT desktop app does not make a cloud-backed chat local. Connect the hosted MCP separately for regular ChatGPT chats. The hosted package remains remote even when installed locally. Account/device APIs and streams remain remote services. Public ZIP submission, identity/domain verification, authentication/tool scans, reviewer access, and recorded test evidence are separate steps.
 
 ## License
 

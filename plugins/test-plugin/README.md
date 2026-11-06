@@ -1,27 +1,20 @@
-# Test Plugin — public OpenAI MCP profile
+# Test Plugin — local MCP connection
 
-Connects to **`https://cloud.mobilerun.ai/api/mcp/openai`** over Streamable HTTP, with browser OAuth handled by the host and Mobilerun's existing authorization service.
+**Local testing only.** The bridge and credential setup helper in this directory are excluded from all production provider packages. Test Plugin includes the same three practical skills as the hosted packages: `onboarding` for connection and first-device setup, `mobile-tasks` for device/app control and bounded tasks, and `workflow-automation` for reusable actions and triggers. Build this ZIP explicitly with `python3 scripts/package_test_plugin.py`; `python3 scripts/package_plugins.py` builds only the four hosted provider packages and does not require Test Plugin.
 
-The portable MCP configuration uses the standard `type` and `url` fields. The host discovers OAuth from the protected endpoint; no fixed token or nonportable per-server authentication override is embedded.
+Test Plugin connects through a local stdio bridge to **`http://localhost:8080/mcp/openai`**. Local setup is supported on POSIX systems, including macOS and Linux, and requires Node.js 20.3 or later (`AbortSignal.any`); Node.js 22 is recommended. It requires a running local Mobilerun MCP server on port 8080. The bridge communicates with a compatible desktop-local Work or Codex process over stdio and with the local server over Streamable HTTP. This does not connect regular cloud ChatGPT chats; no tunnel is provisioned or implied, and no cloud-host configuration fields are required. The host does not need to inject an HTTP API key into the plugin configuration.
 
-**No Node.js, local MCP process, or `MOBILERUN_CLOUD_API_KEY` setup is required.** The plugin package may be installed locally, but MCP tools, devices and streams are remote. It does not provide offline or local-only execution.
+The local server requires a Mobilerun API key, supplied to the bridge through `MOBILERUN_CLOUD_API_KEY` or `~/.config/mobilerun/local-mcp.json`. Store the key securely outside the plugin and ZIP; never paste it into chat or source control. Consult the included local authentication setup helper for secure setup. A local authentication error requires checking the bridge credentials and server, not browser OAuth. Local server authentication is not bypassed.
+
+The bridge is a narrow, stateless JSON-RPC relay: it accepts newline-delimited JSON requests over stdio, forwards each request to the configured loopback HTTP endpoint, and emits JSON responses. It does not implement sessions, SSE, or tunnels. Upstream requests have a 30-second timeout. If an operation times out, its completion may be ambiguous; do not blindly retry mutations. Account, device, and WebRTC streaming services remain remote. This is not an offline phone or a promise of local device execution. Device provisioning and tasks may incur charges; check the active workspace billing dashboard.
 
 ## Install or update
 
-1. Refresh/reinstall **Test Plugin** from the **Mobilerun local plugins** source in the ChatGPT desktop app. Restart the app after changing the package. The marketplace points to this plugin directory, not a ZIP.
-2. Remove or disconnect the previous Test Plugin stdio connection if the client retains it. This package is now version **0.2.0**; the old version used a local API-key server.
-3. Complete Mobilerun browser sign-in and consent when the client requests it.
-4. Open a **new chat**, select Test Plugin with `@`, and try `list_devices` to verify authorized access. Do not provision devices or start paid tasks merely to test the connection.
+1. Start the local MCP server. From this repository root, run `node plugins/test-plugin/scripts/setup-local-auth.mjs` and enter the key at its hidden local terminal prompt. The helper saves it outside the package in `~/.config/mobilerun/local-mcp.json` with private permissions. Do not put the key in the command line or chat.
+2. Disconnect the old cloud-backed Test Plugin connection. Refresh or reinstall **Test Plugin** version **0.3.0** from the local plugins source or the rebuilt ZIP, then restart the host. Do not reuse a saved cloud URL override. The marketplace points to this directory, not the ZIP.
+3. Open a new chat, select Test Plugin, and use `list_devices` to verify access. Do not provision devices or run paid tasks merely to test the connection.
 
-For ZIP installation/import, use the client's supported package workflow. The archive has `plugin.json` and `mcp.json` at its root, with this README and LICENSE. No credentials, local server, dependencies or build inputs are included.
-
-## Profile and OAuth verification
-
-The connector URL explicitly selects the public **OpenAI** profile rather than the unqualified MCP endpoint. The OAuth protected-resource metadata for this exact URL is reachable and identifies Mobilerun's authorization server, which advertises authorization-code authentication with PKCE S256.
-
-Unauthenticated discovery confirms that OAuth metadata is available; it does **not** prove a completed sign-in, the deployed profile's authenticated tool list, or working device streaming. Those need verification through your authorized connection. Profile selection also does not grant device/account permissions.
-
-The host stores OAuth credentials. Do not paste tokens into this package, chat or source control. If no actions appear after installation, inspect the connection's login/startup status and ensure this new package—not the cached stdio version—is selected in a fresh chat.
+Host support for executing the bridge and authenticated access must be verified in the actual host; installing the package alone does not establish a working connection. If the host cannot run this stdio bridge, another compatible local adapter is needed.
 
 ## Maintainer packaging
 
@@ -32,13 +25,4 @@ python3 scripts/package_test_plugin.py
 python3 -m unittest discover -s tests -v
 ```
 
-The exporter writes `zip/test-plugin.zip` with only four allowlisted files. The previous local stdio/viewer experiment is preserved separately in the `mcp-device-streaming` branch's worktree, not in this package. No build or deployment is needed to use the public connector.
-
-## References
-
-- [Mobilerun MCP OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication)
-- [Profile-specific protected-resource metadata](https://cloud.mobilerun.ai/.well-known/oauth-protected-resource/api/mcp/openai)
-- [OpenAI packaging and local marketplace testing](https://developers.openai.com/plugins/build/plugins)
-- [Agent Plugins specification](https://agent-plugins.org/specification)
-
-Local marketplace installation and public-directory publication are separate. This package has not been submitted, approved, or verified in a live authenticated ChatGPT session. Original package files are MIT licensed.
+The exporter writes `zip/test-plugin.zip` with allowlisted plugin files and no credentials or local server. Local marketplace installation and public-directory publication are separate. This package has not been submitted, approved, or verified in a live authenticated ChatGPT session. Original package files are MIT licensed.

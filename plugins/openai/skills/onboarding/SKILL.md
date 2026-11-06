@@ -1,38 +1,49 @@
 ---
 name: onboarding
-description: Use when a user installs or sets up Mobilerun in ChatGPT or Codex, cannot see its tools, needs to authorize or reconnect the MCP, or asks about included credits and signup eligibility.
+description: Use when a user connects Mobilerun in ChatGPT or Codex, has no devices, wants a first Android cloud phone, requests a physical or iOS phone, or needs account or connection help.
 ---
 
-# Connect Mobilerun
+# Get started with Mobilerun
 
-Establish access and resolve account setup, then return to the user's original goal. Tools, resources, operational prompts, and task workflows belong to the hosted MCP—not this skill. An already connected user asking for device work should use the MCP's current guidance, without repeating signup.
+For an already connected account, continue below. To connect:
 
-## Setup
+1. Enable Mobilerun through the host's plugin/MCP connection interface. The endpoint is `https://cloud.mobilerun.ai/api/mcp/openai`.
+2. Complete browser OAuth: sign in or sign up at [Mobilerun Cloud](https://cloud.mobilerun.ai), complete any email verification, then approve access and return to the host. Keep passwords, tokens and sign-in codes in that browser flow.
+3. For a custom ChatGPT connection, where available, open **Plugins > + > Add custom MCP server**, enter the endpoint, and choose **Create as a plugin**. For the full local bundle, install through the desktop app's repository/personal marketplace. A custom connection loads server tools; install the bundle to load these skills too.
+4. If the host requires administrator approval or cannot finish authorization, resolve that host setup step before using Mobilerun tools.
 
-1. Check exposed Mobilerun tools and actual connection errors. Installing a package or enabling a plugin does not prove OAuth is complete. Missing tools alone do not prove expired authorization.
-2. Have the user connect Mobilerun through the host's plugin/MCP connection interface and complete browser OAuth. For first-time accounts, link [Mobilerun Cloud](https://cloud.mobilerun.ai) for browser signup and any email-verification steps shown. Never ask for passwords, tokens, API keys, or verification codes in chat; do not claim to launch or finish authorization unless the host actually did so.
-3. The bundled endpoint is `https://cloud.mobilerun.ai/api/mcp/openai`. Follow the [documented OAuth instructions](https://docs.mobilerun.ai/mcp-server#oauth-authentication); never put credentials in chat or distribute them in a package. For direct ChatGPT testing, the documented route is [Plugins](https://chatgpt.com/plugins) > plus button > **Add custom MCP server**, then **Create as a plugin**, where available. If the host cannot complete OAuth, report the client authentication limitation rather than pretending authorization succeeded. This tests the server connection, not the bundled skill. Account/admin policy may restrict custom connections.
-4. For a full local bundle, the ChatGPT desktop app supports a repository/personal marketplace. A local folder is not automatically installed in ChatGPT web. Ask which surface the user uses only if that changes the needed setup step; do not send them to Claude-specific menus. Public-directory install and workspace availability depend on the actual listing and administrator policy.
-5. After connection, call an available read-only tool such as `list_devices`, using the actual exposed tool name. Profiles can omit tools. If no suitable tool is exposed, say that access cannot yet be verified instead of inventing a status call. A successful empty list means connected with no visible devices; it is not an authentication failure.
+<!-- BEGIN SHARED FIRST DEVICE -->
+## Connect and choose a goal
 
-## Recovery by evidence
+Use the Mobilerun tools exposed by the host. When `list_devices` is available, call it to check the connection and discover existing phones. A successful empty list means **connected, with no devices yet**. If it is missing, use the host setup steps above and report that a live connection check is not yet available. When the user requests a no-spend or local-only installation check, inspect the plugin manifest and MCP configuration without live calls, phone creation, or task execution.
 
-| Evidence | Remedy |
+Ask what the user wants to do only when their goal is missing. Useful starting points: test an app, complete a mobile workflow, inspect a phone, or run a recurring check. If the goal is already clear, continue with it.
+
+## First useful run
+
+1. **Reuse a suitable device** from the list. If none exists, recommend an **Android cloud phone** as the first-device option for a new user without an upgraded device plan. Keep an explicit iOS choice instead of replacing it with Android.
+2. **Create the requested phone** with `create_device` and the exposed schema: `android_cloud_phone` for Android, or `ios_phone` for an explicitly requested, eligible iOS device. Device provisioning uses plan capacity or device minutes; agent tasks use execution credits. If creation has not been requested, explain the chosen phone and usage, then get the user's go-ahead. An informed request to create it is sufficient authorization; do not ask again for the same action.
+3. **Wait for readiness.** Keep the returned device ID and poll `get_device` at a reasonable interval until `ready`, for at most 5 minutes or 10 calls, whichever comes first (or a shorter host limit). Stop immediately on `terminated` or `stopped`; `maintenance` and `unknown` may be temporary, but stop when the budget expires. If not ready, report the device ID and last verified state and ask how to proceed. Do not create a replacement or resume a stopped device without appropriate authorization. If provisioning returns an error, use the recovery table below rather than creating duplicates.
+4. **Do the user's work.** Use [mobile-tasks](../mobile-tasks/SKILL.md) for app installation, direct phone control, a one-off agent task, or task results. Use [workflow-automation](../workflow-automation/SKILL.md) for recurring checks, event triggers, reusable actions, and hosted-assistant workflows. Both guides are bundled; no documentation lookup is needed.
+
+If the user asks for a “physical phone,” explain that an Android cloud phone is a hosted Android device accessed remotely, not their own handset. For an owned phone, use the exposed personal-device connection operation if available and have the user complete device-side setup; otherwise explain that this connection cannot register it. A `device_slot` is not a substitute for an Android cloud phone. If the user explicitly requests iOS, keep that choice and use the account's iOS eligibility instead of silently switching platforms.
+
+## Account and connection recovery
+
+| Result | Next step |
 | --- | --- |
-| Tools missing | Check plugin installation, connection state, and workspace policy; do not assume login expired. |
-| Explicit unauthenticated or expired authorization | Ask the user to reconnect in the host and complete browser OAuth. |
-| Permission denied | Check intended account/workspace and connection permissions; do not bypass policy or switch identity automatically. |
-| Insufficient credits / payment required | Check active workspace billing and the balance named by the error. Device minutes and agent credits are different allowances. Reconnecting does not reset a trial. |
-| Network/service failure | Report the failure; retry a read only when appropriate. Never re-sign up as a remedy or blindly retry a write. |
+| No Mobilerun tools | Enable the plugin/MCP connection in the host and check workspace availability. |
+| Authentication expired / unauthenticated | Reconnect in the host and complete browser sign-in. |
+| Permission denied | Check the selected account/workspace and its access permissions. |
+| `DEVICE_TYPE_UNAVAILABLE` / 422 | Choose an available type; recommend Android for a new user's first phone. |
+| `SUBSCRIPTION_REQUIRED` | Explain the requested device's plan requirement; offer Android when appropriate. |
+| `PAYMENT_REQUIRED` / 402 | Use the returned reason to check device minutes, execution credits, or concurrency in the active workspace. |
+| `RESOURCE_EXHAUSTED` / 429 | Check available plan slots/concurrency before provisioning again. |
+| Interrupted creation | Inspect the device list and returned device ID before submitting another create request. |
 
-## Included credits
+For plan, included-credit, or balance questions, use the active workspace's [billing page](https://cloud.mobilerun.ai/billing). Follow its actual account setup steps. Reconnecting does not change balances.
 
-Use [Mobilerun billing](https://cloud.mobilerun.ai/billing) as the authority for the current workspace's actual plan, offer, eligibility, and available balance. Do not promise a fixed credit amount or infer eligibility from the plugin.
+Finish with the connection result, selected device ID/state, and the next action for the user's goal—not another setup questionnaire.
 
-Follow only offers and setup steps actually shown in the dashboard. Do not invent a claim button or award API, suggest re-signup to obtain another offer, or attempt a duplicate grant. Personal and shared workspaces may have different balances. Never grant or transfer credits, subscribe, or change billing context automatically.
-
-## Handoff
-
-Report verified access or the remaining user action, then continue the original request with server-provided guidance. Use `get-started` only if this host exposes MCP prompt invocation; do not manufacture a prompt-as-tool call or copy the server's workflow. Never provision a device, purchase anything, or run a billed task merely to test setup.
-
-Example: `list_devices` returns `[]` successfully → “Mobilerun is connected; no devices are visible in this account.” Continue with the user's goal, not another OAuth loop.
+**Example:** “Mobilerun is connected; there are no devices yet. I'll use an Android cloud phone for your app test, wait for it to be ready, then install the app and check the login screen.”
+<!-- END SHARED FIRST DEVICE -->

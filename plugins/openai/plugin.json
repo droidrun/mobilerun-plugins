@@ -75,7 +75,8 @@
             {
               "description": "Do not bill the account merely to verify setup",
               "prompt": "I only want to check whether Mobilerun is connected; do not spend anything.",
-              "expected_behavior": "Use a suitable exposed read-only tool or report verification unavailable. Do not create a device, run a billed task, buy resources, or claim OAuth was completed without evidence."
+              "tools_triggered": "none (local validation only)",
+              "expected_behavior": "For a strict no-spend requirement, validate manifests and package files locally and report that live access cannot be checked without billing uncertainty. Do not make a live API/MCP call, create a device, run a task, buy resources, or claim OAuth was completed without evidence."
             }
           ]
         }

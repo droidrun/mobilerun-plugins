@@ -1,4 +1,4 @@
-"""Contracts for Test Plugin's public OpenAI-profile connection (no device calls)."""
+"""Contracts for Test Plugin's local OpenAI-profile connection (no device calls)."""
 import json
 import importlib.util
 from pathlib import Path
@@ -11,24 +11,39 @@ PACKAGE = ROOT / 'plugins' / 'test-plugin'
 
 
 class TestPluginTests(unittest.TestCase):
-    def test_identity_is_separate_and_does_not_require_local_execution(self):
+    def test_identity_and_version(self):
         self.assertTrue((PACKAGE / 'plugin.json').is_file(), 'Missing Test Plugin manifest')
         manifest = json.loads((PACKAGE / 'plugin.json').read_text())
         self.assertEqual(manifest['name'], 'test-plugin')
+        self.assertEqual(manifest['version'], '0.3.0')
         extension = manifest['extensions']['com.openai']
         self.assertEqual(extension['interface']['displayName'], 'Test Plugin')
-        self.assertFalse(extension.get('requires_local_executor', False))
+        self.assertEqual(extension['onboardingSkill'], './skills/onboarding/SKILL.md')
+        self.assertTrue((PACKAGE / extension['onboardingSkill']).is_file())
+        self.assertIn('Node.js 20.3 or later', extension['interface']['longDescription'])
+        self.assertIn('Node.js 22 is recommended', extension['interface']['longDescription'])
+        self.assertIn('does not connect regular cloud ChatGPT chats', extension['interface']['longDescription'])
         hosted = json.loads((ROOT / 'plugins/openai/mcp.json').read_text())
         self.assertTrue(all('url' in server for server in hosted['mcpServers'].values()))
 
-    def test_public_openai_profile_uses_oauth_without_local_runtime(self):
+    def test_local_openai_profile_has_no_embedded_credentials(self):
         self.assertTrue((PACKAGE / 'mcp.json').is_file(), 'Missing public MCP configuration')
         config = json.loads((PACKAGE / 'mcp.json').read_text())
         self.assertEqual(config['mcpServers'], {'test-plugin': {
-            'type': 'streamable-http',
-            'url': 'https://cloud.mobilerun.ai/api/mcp/openai',
+            'type': 'stdio',
+            'command': 'node',
+            'args': ['${PLUGIN_ROOT}/scripts/local-mcp.mjs'],
         }})
         self.assertNotIn('MOBILERUN_CLOUD_API_KEY', json.dumps(config))
+        self.assertIn('http://localhost:8080/mcp/openai', (PACKAGE / 'scripts/local-mcp.mjs').read_text())
+
+    def test_readme_describes_local_support_and_bridge_limits(self):
+        readme = (PACKAGE / 'README.md').read_text()
+        for phrase in ('macOS and Linux', 'Node.js 20.3 or later', 'Node.js 22 is recommended',
+                       'regular cloud ChatGPT chats', '30-second timeout',
+                       'do not blindly retry mutations', 'stateless JSON-RPC relay'):
+            self.assertIn(phrase, readme)
+        self.assertNotIn('viewer', readme.lower())
 
     def test_local_marketplace_keeps_original_and_adds_test_plugin(self):
         catalog = json.loads((ROOT / '.agents/plugins/marketplace.json').read_text())
@@ -65,7 +80,10 @@ class TestPluginArchiveTests(unittest.TestCase):
             exporter.package_plugin(root, output)
             with zipfile.ZipFile(output) as archive:
                 self.assertIsNone(archive.testzip())
-                self.assertEqual(set(archive.namelist()), {'plugin.json', 'mcp.json', 'README.md', 'LICENSE'})
+                self.assertEqual(set(archive.namelist()), set(exporter.DISTRIBUTION_FILES))
+                self.assertIn('skills/onboarding/SKILL.md', archive.namelist())
+                self.assertIn('skills/mobile-tasks/SKILL.md', archive.namelist())
+                self.assertIn('skills/workflow-automation/SKILL.md', archive.namelist())
                 self.assertEqual(set(archive.namelist()), set(exporter.DISTRIBUTION_FILES))
                 self.assertNotIn('.env', archive.namelist())
                 for name in archive.namelist():
