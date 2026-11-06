@@ -9,6 +9,6 @@ Mobilerun gives agents access to Android devices and automation through its exis
 - Other targets and publishing boundaries: [provider overview](../docs/providers.md).
 - Server source: [droidrun/mobilerun-mcp](https://github.com/droidrun/mobilerun-mcp).
 
-The server provides tools, resources, permissions, and task execution. Every provider package includes the same three practical skills: `onboarding` for connection and first-device setup, `mobile-tasks` for device/app control and bounded agent tasks, and `workflow-automation` for reusable actions, triggers, and hosted-assistant conversations. Tasks, devices, and recurring workflows can consume credits or minutes. OpenClaw includes the same skill files; OpenClaw skill loading is not tested here.
+The server provides tools, resources, permissions, and task execution. Every provider package includes the same two practical skills: `onboarding` for connection and first-device setup, and `mobile-tasks` for device/app control and bounded agent tasks. Tasks and devices can consume credits or minutes. OpenClaw includes the same skill files; OpenClaw skill loading is not tested here.
 
-Run `python3 scripts/sync_skills.py` after changing canonical files in `shared/`; use `python3 scripts/sync_skills.py --check` to detect drift. Package exporters include all three skills.
+Run `python3 scripts/sync_skills.py` after changing canonical files in `shared/`; use `python3 scripts/sync_skills.py --check` to detect drift. Package exporters include both skills.

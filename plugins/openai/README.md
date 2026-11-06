@@ -1,6 +1,6 @@
 # Mobilerun for OpenAI
 
-A portable plugin for ChatGPT and Codex with one hosted Mobilerun MCP connection and three practical skills for onboarding, mobile tasks, and workflow automation.
+A portable plugin for ChatGPT and Codex with one hosted Mobilerun MCP connection and two practical skills for onboarding and mobile tasks.
 
 ## Package
 
@@ -8,7 +8,6 @@ A portable plugin for ChatGPT and Codex with one hosted Mobilerun MCP connection
 - `mcp.json`: one Streamable HTTP server at `https://cloud.mobilerun.ai/api/mcp/openai`.
 - `skills/onboarding/SKILL.md`: host-specific connection recovery plus synchronized Android-first guidance.
 - `skills/mobile-tasks/SKILL.md`: device and app work, direct control, bounded tasks, results, and recovery.
-- `skills/workflow-automation/SKILL.md`: reusable actions, triggers, schedules, validation, and run history.
 - `assets/logo.svg`: existing 256×256 Mobilerun logo from `droidrun/mobilerun-mcp/assets/logo.svg`.
 - `LICENSE`: MIT notice included for independent distribution.
 
@@ -45,6 +44,6 @@ Developer/domain verification, authentication checks, and marketplace review are
 
 ## Verification boundaries
 
-Repository tests check package structure, portable metadata, endpoint, all three skills, square SVG asset, license, marketplace resolution, and linked documentation. They do not exercise the host's plugin-loading interface.
+Repository tests check package structure, portable metadata, endpoint, both skills, square SVG asset, license, marketplace resolution, and linked documentation. They do not exercise the host's plugin-loading interface.
 
 Official references: [package format and local marketplaces](https://developers.openai.com/plugins/build/plugins), [submission and review fields](https://developers.openai.com/plugins/deploy/submission), [plugin guidelines](https://developers.openai.com/plugins/plugin-guidelines).

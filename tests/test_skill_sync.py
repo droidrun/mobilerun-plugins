@@ -33,7 +33,7 @@ class SkillSyncTests(unittest.TestCase):
 
     def test_sync_repairs_stale_copies_and_check_then_passes(self):
         pending = sync.synchronize(self.root)
-        self.assertEqual(len(pending), 15)
+        self.assertEqual(len(pending), 10)
         self.assertEqual(sync.check(self.root), [])
         for provider in sync.PROVIDERS:
             text = (self.root / f'plugins/{provider}/skills/onboarding/SKILL.md').read_text()

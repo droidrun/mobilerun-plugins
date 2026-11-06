@@ -83,7 +83,7 @@ class TestPluginArchiveTests(unittest.TestCase):
                 self.assertEqual(set(archive.namelist()), set(exporter.DISTRIBUTION_FILES))
                 self.assertIn('skills/onboarding/SKILL.md', archive.namelist())
                 self.assertIn('skills/mobile-tasks/SKILL.md', archive.namelist())
-                self.assertIn('skills/workflow-automation/SKILL.md', archive.namelist())
+                self.assertNotIn('skills/workflow-automation/SKILL.md', archive.namelist())
                 self.assertEqual(set(archive.namelist()), set(exporter.DISTRIBUTION_FILES))
                 self.assertNotIn('.env', archive.namelist())
                 for name in archive.namelist():

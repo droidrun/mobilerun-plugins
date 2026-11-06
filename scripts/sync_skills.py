@@ -5,7 +5,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 PROVIDERS = ('claude', 'openai', 'cursor', 'openclaw', 'test-plugin')
-SKILLS = ('mobile-tasks', 'workflow-automation')
+SKILLS = ('mobile-tasks',)
 START = '<!-- BEGIN SHARED FIRST DEVICE -->'
 END = '<!-- END SHARED FIRST DEVICE -->'
 

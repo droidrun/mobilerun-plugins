@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.sync_skills import check as check_shared_skills
 
-SKILL_FILES = tuple(f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks', 'workflow-automation'))
+SKILL_FILES = tuple(f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks'))
 FILES = {
     'claude': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', *SKILL_FILES),
     'openai': ('plugin.json', 'mcp.json', 'README.md', 'LICENSE', 'assets/logo.svg', *SKILL_FILES),

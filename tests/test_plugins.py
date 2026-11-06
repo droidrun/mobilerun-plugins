@@ -32,7 +32,7 @@ class ClaudeBundleTests(unittest.TestCase):
     def test_self_contained_declarative_package(self):
         self.assertTrue(PLUGIN.is_dir(), 'Installable plugin folder missing')
         allowed = {'.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE',
-                   *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks', 'workflow-automation')}}
+                   *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}}
         files = set()
         for path in PLUGIN.rglob('*'):
             self.assertFalse(path.is_symlink(), f'Symlink in bundle: {path}')
@@ -49,8 +49,8 @@ class ClaudeBundleTests(unittest.TestCase):
         self.assertTrue(match[2].startswith('Use when'))
         self.assertLess(len(match[0]), 1024)
 
-    def test_exact_three_skills_are_packaged(self):
-        for name in ('onboarding', 'mobile-tasks', 'workflow-automation'):
+    def test_exact_two_skills_are_packaged(self):
+        for name in ('onboarding', 'mobile-tasks'):
             text = self.read(f'skills/{name}/SKILL.md')
             self.assertIn(f'name: {name}', text)
 
@@ -149,7 +149,7 @@ class OpenAIBundleTests(unittest.TestCase):
             if path.is_file():
                 files.add(path.relative_to(self.plugin).as_posix())
         self.assertEqual(files, {'plugin.json', 'mcp.json', 'README.md', 'LICENSE',
-                                 'assets/logo.svg', *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks', 'workflow-automation')}})
+                                 'assets/logo.svg', *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}})
         self.assertEqual(self.read('LICENSE'), (ROOT / 'LICENSE').read_text())
 
     def test_marketplace_resolves_openai_package(self):
@@ -197,7 +197,7 @@ class MarketplaceArtifactTests(unittest.TestCase):
             if path.is_file():
                 files.add(path.relative_to(package).as_posix())
         self.assertEqual(files, {'.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE',
-                                 *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks', 'workflow-automation')}})
+                                 *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}})
 
     def test_openai_upload_matches_source_and_has_root_mcp(self):
         package = ROOT / 'plugins/openai'
@@ -232,7 +232,7 @@ class MarketplaceArtifactTests(unittest.TestCase):
                 self.assertNotIn(path.suffix, {'.pyc', '.exe', '.dylib', '.so'})
                 self.assertNotIn(path.name, {'.DS_Store', '.env'})
         self.assertTrue((package / 'skills/onboarding/SKILL.md').is_file())
-        for name in ('mobile-tasks', 'workflow-automation'):
+        for name in ('mobile-tasks',):
             self.assertTrue((package / f'skills/{name}/SKILL.md').is_file())
 
     def test_all_host_packages_have_synced_shared_skill_sources(self):

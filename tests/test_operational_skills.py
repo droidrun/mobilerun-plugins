@@ -31,13 +31,6 @@ class OperationalSkillsTests(unittest.TestCase):
             'terminal', 'duplicate', 'minutes', 'credits', 'reset', 'termination',
             'approval', 'example', 'common', 'schema', 'submitted'))
 
-    def test_workflow_and_assistant_recipe(self):
-        self.assert_terms(self.skill('workflow-automation'), (
-            'action', 'catalog', 'schedule', 'timezone', 'event', 'manual', 'custom',
-            'validate', 'dry-run', 'enqueue', 'enable', 'history',
-            'assistant', 'session', 'message', 'poll', 'permission', 'once',
-            'approval', 'restriction', 'purchase', 'cost', 'example', 'common', 'schema'))
-
     def test_mobile_terminal_states_and_summary_fallback(self):
         text = self.skill('mobile-tasks')
         self.assert_terms(text, ('completed', 'failed', 'cancelled', 'where exposed',
@@ -58,27 +51,6 @@ class OperationalSkillsTests(unittest.TestCase):
                                          '`maintenance`', '`unknown`', '`stopped`',
                                          'device id', 'last verified state',
                                          'do not create a replacement'))
-
-    def test_resource_discovery_and_assistant_resume(self):
-        text = self.skill('workflow-automation')
-        description = text.split('---', 2)[1]
-        self.assert_terms(description, ('sms', 'email', 'files', 'proxy'))
-        self.assert_terms(text, ('numbers_list', 'numbers_messages', 'numbers_send',
-                                 'mailboxes_list', 'mailboxes_messages', 'mailboxes_message',
-                                 'files_list', 'files_download', 'files_upload_url',
-                                 'proxies_list', 'configure_device_get_proxy_status',
-                                 'before sending', 'turnactive', 'pending cards',
-                                 '`once`', '`reject`'))
-
-    def test_actual_workflow_and_assistant_contracts(self):
-        text = self.skill('workflow-automation')
-        self.assertNotIn('create the flow disabled', text)
-        self.assertNotIn('build a disabled flow', text)
-        self.assert_terms(text, ('defaults to enabled', 'before creation', 'real one-device',
-                                 'invocationid', 'pending.questions', 'pending.permissions',
-                                 'assistant_list_sessions', 'turn.outcome', 'lastturnoutcome',
-                                 'errortext', 'catalogentryid', 'triggerid', 'deviceids',
-                                 'position', 'questionid', 'answers', 'permissionid', 'title'))
 
     def test_actual_mobile_call_and_billing_contracts(self):
         text = self.skill('mobile-tasks')

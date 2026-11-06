@@ -13,7 +13,6 @@ DISTRIBUTION_FILES = (
     'plugin.json', 'mcp.json', 'README.md', 'LICENSE',
     'scripts/local-mcp.mjs', 'scripts/setup-local-auth.mjs',
     'skills/onboarding/SKILL.md', 'skills/mobile-tasks/SKILL.md',
-    'skills/workflow-automation/SKILL.md',
 )
 
 
@@ -71,7 +70,7 @@ def main(argv=None) -> int:
         canonical = _regular_file(ROOT, 'shared/onboarding-first-device.md').read_text()
         if onboarding != _replace_section(onboarding, canonical, str(args.package)):
             raise ValueError('Selected package shared skills are out of sync')
-        for skill in ('mobile-tasks', 'workflow-automation'):
+        for skill in ('mobile-tasks',):
             content = _regular_file(args.package, f'skills/{skill}/SKILL.md').read_text()
             expected = _regular_file(ROOT, f'shared/skills/{skill}/SKILL.md').read_text()
             if content != expected:

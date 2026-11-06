@@ -1,6 +1,6 @@
 # Mobilerun for OpenClaw
 
-A compatible MCP bundle for OpenClaw. This is a **Claude-format bundle consumed by OpenClaw**, not a native OpenClaw plugin. Exactly one format marker, `.claude-plugin/plugin.json`, identifies the bundle. It includes `onboarding` for connection and first-device setup, `mobile-tasks` for device/app control and bounded tasks, and `workflow-automation` for reusable actions and triggers. OpenClaw skill loading is not tested here. No hooks, local runtime, or dependencies are included.
+A compatible MCP bundle for OpenClaw. This is a **Claude-format bundle consumed by OpenClaw**, not a native OpenClaw plugin. Exactly one format marker, `.claude-plugin/plugin.json`, identifies the bundle. It includes `onboarding` for connection and first-device setup, and `mobile-tasks` for device/app control and bounded tasks. OpenClaw skill loading is not tested here. No hooks, local runtime, or dependencies are included.
 
 The root `.mcp.json` declares one hosted server at `https://cloud.mobilerun.ai/api/mcp`, explicitly using `streamable-http` rather than the default SSE transport. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication) for this endpoint; use the host's connection flow and do not put credentials in the bundle or chat. OpenClaw runtime authentication remains unverified. Tools, prompts, permissions, and task execution remain on the MCP server. Available tools depend on the authenticated connection and server profile.
 

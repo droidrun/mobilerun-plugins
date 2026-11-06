@@ -7,9 +7,13 @@ PROVIDERS = ('claude', 'openai', 'cursor', 'openclaw', 'test-plugin')
 
 
 class SharedSkillTests(unittest.TestCase):
-    def test_every_package_has_exactly_three_skill_entrypoints(self):
-        expected = {'onboarding/SKILL.md', 'mobile-tasks/SKILL.md',
-                    'workflow-automation/SKILL.md'}
+    def test_removed_workflow_skill_has_no_source_entrypoints(self):
+        roots = [ROOT / 'shared/skills', *(ROOT / f'plugins/{provider}/skills' for provider in PROVIDERS)]
+        for root in roots:
+            self.assertFalse((root / 'workflow-automation/SKILL.md').exists(), str(root))
+
+    def test_every_package_has_exactly_two_skill_entrypoints(self):
+        expected = {'onboarding/SKILL.md', 'mobile-tasks/SKILL.md'}
         for provider in PROVIDERS:
             folder = ROOT / f'plugins/{provider}/skills'
             actual = {path.relative_to(folder).as_posix()
@@ -27,7 +31,7 @@ class SharedSkillTests(unittest.TestCase):
             self.assertIn(phrase, guidance)
 
     def test_operational_skills_are_canonical_in_every_package(self):
-        for name in ('mobile-tasks', 'workflow-automation'):
+        for name in ('mobile-tasks',):
             canonical = ROOT / f'shared/skills/{name}/SKILL.md'
             self.assertTrue(canonical.is_file(), f'Missing canonical {name}')
             text = canonical.read_text()

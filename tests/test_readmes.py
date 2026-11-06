@@ -4,11 +4,11 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 PROVIDERS = ('claude', 'openai', 'cursor', 'openclaw', 'test-plugin')
-SKILLS = ('onboarding', 'mobile-tasks', 'workflow-automation')
+SKILLS = ('onboarding', 'mobile-tasks')
 
 
 class ReadmeSkillInventoryTests(unittest.TestCase):
-    def test_provider_overviews_name_all_three_skills_without_legacy_billing_copy(self):
+    def test_provider_overviews_name_both_skills_without_legacy_billing_copy(self):
         paths = [ROOT / 'plugins/README.md'] + [ROOT / 'plugins' / provider / 'README.md'
                                                 for provider in PROVIDERS]
         for path in paths:

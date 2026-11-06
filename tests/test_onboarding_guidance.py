@@ -10,7 +10,7 @@ class OnboardingGuidanceTests(unittest.TestCase):
         text = (ROOT / 'shared/onboarding-first-device.md').read_text()
         self.assertIn('## First useful run', text)
         self.assertIn('mobile-tasks', text)
-        self.assertIn('workflow-automation', text)
+        self.assertNotIn('workflow-automation', text)
         for phrase in ('testing-billing', 'evidence gap', 'billing unconfirmed',
                        'universally billing-free', 'consult current docs'):
             self.assertNotIn(phrase, text.lower())
