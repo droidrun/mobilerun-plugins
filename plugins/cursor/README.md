@@ -14,6 +14,10 @@ The server URL is `https://cloud.mobilerun.ai/api/mcp`; there are no bundled API
 
 The dedicated `/api/mcp/cursor` profile is deferred: that public route and its OAuth metadata returned 404 during verification. This package deliberately retains the existing base endpoint until the Cursor profile is added; it does not substitute another provider's profile.
 
+## Privacy and terms
+
+Service-side processing is covered by the [Mobilerun privacy policy](https://cloud.mobilerun.ai/legal/privacy-policy) and [terms of service](https://cloud.mobilerun.ai/legal/terms-of-service), as well as Cursor's applicable policies.
+
 ## Public submission
 
 Use [Cursor Marketplace publishing](https://cursor.com/marketplace/publish) only after validating this package and completing local client tests. Cursor requires public open-source Git source. Verify that the submitted repository and package path are publicly accessible. No push or submission is performed by copying this package locally.

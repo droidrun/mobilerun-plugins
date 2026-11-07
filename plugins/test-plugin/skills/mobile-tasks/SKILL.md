@@ -5,7 +5,23 @@ description: Use when a user wants to operate a Mobilerun device, test an app, r
 
 # Mobile devices and tasks
 
-Choose direct control for step-by-step inspection or an agent task for a bounded goal. Use the tools actually exposed by the host and their current schemas: profiles differ. Device billing can use subscription capacity or minute billing; auto mode can fall back to minutes. Agent execution consumes execution credits. Keep the user's app, device and requested action in scope.
+Choose direct control for inspection or an agent task for a bounded goal. Use exposed tools and current schemas; profiles differ. Keep the user's app, device and requested action in scope.
+
+## Feature requirements
+
+Explain only the requested feature or actual limitation. Respect included-only and no-commerce tool/profile restrictions and user constraints: never initiate purchases or bypass restrictions. No prices, plan lists or upgrade prompts.
+
+| Feature | Relevant requirement |
+| --- | --- |
+| More phones | Subscription slots, minute balance and concurrency are distinct limits; subscription Android phones need a dedicated proxy. Auto minute fallback is not guaranteed. |
+| Tasks and automation | Agent execution and workflow building/runs use execution credits. |
+| Numbers and SMS | A number is a separate resource; country availability, SMS capability and included capacity vary. If included capacity is absent, respect included-only scope. |
+| Mailboxes | A connected mailbox or included capacity may be available; a separate service entitlement or setup may be needed. |
+| Proxies | Included capacity and traffic allowance vary; BYO proxy requires compatible setup. |
+| eSIM | Carrier service and device capability are needed. |
+| Apps, files, recording, integrations | Availability and setup vary; integrations may require connection and authorization, not a universal paid upgrade. |
+
+Check balances in active workspace account usage settings. Only offer [resource capabilities](https://docs.mobilerun.ai/mcp-server) for a relevant account/feature-requirement question or confirmed entitlement limitation, not for missing tools or connectivity errors. Optional information, not a runtime lookup.
 
 ## Tool-intent map
 
@@ -18,7 +34,7 @@ Choose direct control for step-by-step inspection or an agent task for a bounded
 | Agent execution | `run_task`, `get_task_status`, `get_task_summary`, `get_task_trajectory`, `send_task_message`, `stop_task` |
 | Evidence | `get_task_media_screenshot`, `get_task_media_ui_state`; device screenshot or recording tools |
 
-Names and arguments vary by profile. If an operation is unavailable, report it and offer an exposed alternative; do not bypass restrictions. Follow the exposed schema for supported settings and arguments, rather than passing REST options through an MCP tool.
+Names and arguments vary by profile. If unavailable, report the operation and offer an exposed alternative; do not bypass restrictions or pass REST options through an MCP tool.
 
 ## Prepare the device and app
 
@@ -28,9 +44,9 @@ Names and arguments vary by profile. If an operation is unavailable, report it a
 
 ## Direct control: observe → act → observe
 
-1. Obtain current UI state or a screenshot; identify the app and target control. For a long UI tree, use the tool's pagination or filters where available.
-2. Perform one appropriate action: tap a visible target, swipe, type into the focused field, or use a navigation key. Keep input within the user's requested scope.
-3. Observe again and verify the expected state before the next action. Report the visible result, not merely a successful tap. If a control is absent, refresh the view and try a relevant navigation step rather than guessing coordinates repeatedly.
+1. Obtain UI state or a screenshot; identify the app and target. Paginate or filter long UI trees where available.
+2. Tap a visible target, swipe, type into the focused field, or navigate; stay in scope.
+3. Observe again and verify the expected state before acting. Report the visible result, not merely a tap. If a control is absent, refresh and navigate rather than repeatedly guessing coordinates.
 
 ## Bounded agent task
 
@@ -44,11 +60,11 @@ Minimal calls, using actual IDs and instruction: `run_task({deviceId: "device-id
 
 ## Common errors and recovery
 
-- **Not ready or app missing:** check device state and installation job; wait for readiness or select the correct installed app.
+- **Not ready or app missing:** check state and installation job; wait or select the correct app.
 - **Permission denied or unavailable operation:** check the connected workspace and exposed tool schema; respect the restriction.
-- **402 or quota error:** report the returned reason and check the relevant workspace allowance for device minutes or execution credits.
+- **402 or quota error:** report the returned reason; check the applicable workspace limit: slots, concurrency, device minutes or execution credits.
 - **Failed or stalled task:** inspect status, summary and trajectory; explain the evidence and adjust the task only after deciding whether a new run is appropriate. Do not blindly retry an uncertain write.
 
 ## Example
 
-“Test that the settings screen opens in my Android app.” Find the chosen ready device and installed package, launch it, observe the screen, tap Settings, then observe again. Report whether Settings was visible and cite the observed screen. For an agent run, submit once, track the ID to terminal status and report the summary and screenshot evidence instead.
+“Test that Settings opens.” Launch the app on the ready device, observe, tap Settings, and observe again. Report the result and screen evidence.

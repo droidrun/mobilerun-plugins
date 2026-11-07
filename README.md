@@ -60,7 +60,7 @@ python3 -B -m unittest discover -s tests -v
 claude plugin validate plugins/claude
 ```
 
-All archives are written to Git-ignored `zip/`. The production exporter refreshes the existing root-level Claude, OpenAI and OpenClaw archive paths as identical compatibility copies. Explicit file lists exclude development dependencies and secrets. Only the separately built Test Plugin includes the local bridge and setup helper; its credential file remains outside the package.
+Both builders write their default archives to Git-ignored `zip/`. Explicit file lists exclude development dependencies and secrets. Only the separately built Test Plugin includes the local bridge and setup helper; its credential file remains outside the package.
 
 The Claude command requires its CLI. Static checks validate the bundle's shape, not live OAuth, agent decisions, or marketplace acceptance. Follow each package README for upload packaging and manual scenarios. Hosted provider folders ship directly; experimental source/build packages use an explicit runtime-file allowlist. Never put credentials or development scratch files in an upload.
 

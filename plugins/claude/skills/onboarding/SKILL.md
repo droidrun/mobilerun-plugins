@@ -40,7 +40,7 @@ If the user asks for a “physical phone,” explain that an Android cloud phone
 | `RESOURCE_EXHAUSTED` / 429 | Check available plan slots/concurrency before provisioning again. |
 | Interrupted creation | Inspect the device list and returned device ID before submitting another create request. |
 
-For plan, included-credit, or balance questions, use the active workspace's [billing page](https://cloud.mobilerun.ai/billing). Follow its actual account setup steps. Reconnecting does not change balances.
+Only when answering a relevant account/feature-requirement question or confirmed entitlement limitation, explain the applicable requirement. Subscription slots, device minutes, concurrency and execution credits are distinct; check the applicable one rather than assuming an upgrade is required. For current balances, have the user check the active workspace account usage settings in their browser. Optionally offer [execution credits information](https://docs.mobilerun.ai/credits) for such questions or limitations, not for missing tools or connectivity errors; do not fetch it as part of routine work. Reconnecting does not change balances.
 
 Finish with the connection result, selected device ID/state, and the next action for the user's goal—not another setup questionnaire.
 

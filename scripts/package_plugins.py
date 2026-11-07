@@ -1,7 +1,6 @@
 """Build all provider ZIPs from explicit distribution file lists."""
 from pathlib import Path
 import json
-import shutil
 import sys
 import tempfile
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
@@ -72,7 +71,4 @@ if __name__ == '__main__':
         raise SystemExit('Shared skills are out of sync; run python3 scripts/sync_skills.py')
     for provider in FILES:
         target = export_provider(provider)
-        # Keep the existing ignored root-level archives in sync for compatibility.
-        if provider in ('claude', 'openai', 'openclaw'):
-            shutil.copyfile(target, ROOT / target.name)
         print(f'Built {target.relative_to(ROOT)}: {target.stat().st_size:,} bytes')

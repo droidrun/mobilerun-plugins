@@ -28,6 +28,17 @@ class ProductionBoundaryTests(unittest.TestCase):
         return subprocess.run([sys.executable, 'scripts/package_plugins.py'], cwd=self.root,
                               capture_output=True, text=True)
 
+    def test_packager_neither_creates_nor_overwrites_root_archives(self):
+        existing = self.root / 'mobilerun-claude.zip'
+        existing.write_bytes(b'legacy archive')
+        result = self.run_packager()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(existing.read_bytes(), b'legacy archive')
+        for provider in PROVIDERS:
+            self.assertTrue((self.root / 'zip' / f'mobilerun-{provider}.zip').is_file())
+            if provider != 'claude':
+                self.assertFalse((self.root / f'mobilerun-{provider}.zip').exists())
+
     def test_production_only_fixture_packages_without_test_exporter(self):
         for provider in PROVIDERS:
             package = self.root / 'plugins' / provider

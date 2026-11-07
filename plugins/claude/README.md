@@ -23,7 +23,7 @@ The onboarding skill handles setup and recovery, then returns control to MCP gui
 
 ## Credits and costs
 
-Check your current workspace, plan, offers, eligibility, and remaining balance at [Mobilerun billing](https://cloud.mobilerun.ai/billing). Use only offers actually shown in the dashboard; this plugin does not promise a fixed credit amount or an additional signup offer. Personal and shared workspaces may have different balances. This plugin cannot grant, transfer, or reset credits.
+For information about execution credits, see [Mobilerun's credits documentation](https://docs.mobilerun.ai/credits). Check the current balance in your active workspace's account settings. Personal and shared workspaces may have different balances. This plugin cannot grant, transfer, or reset credits.
 
 Tasks and devices may be billable. Onboarding does not buy resources or run a billed task as a connectivity test. Device-minute allowances and task credits are different balances; use the actual error and dashboard to choose a remedy.
 

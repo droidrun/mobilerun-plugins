@@ -30,7 +30,7 @@ Go to [Plugins](https://chatgpt.com/plugins), select the plus button > **Add cus
 
 ## Credits, costs, and data
 
-Check current account eligibility and available balance in [Mobilerun billing](https://cloud.mobilerun.ai/billing). Tasks and devices may consume credits or minutes; connectivity can be checked by listing devices without creating a task or resource.
+For information about execution credits, see [Mobilerun's credits documentation](https://docs.mobilerun.ai/credits). Check the current balance in your active workspace's account settings. Tasks and devices may consume credits or minutes; connectivity can be checked by listing devices without creating a task or resource.
 
 ChatGPT/Codex sends requested tool arguments to Mobilerun; authorized responses may contain device metadata, screenshots, UI state, and task results. OAuth is handled by the host and service in the browser. The package has no runtime, local storage, or telemetry. Service-side processing and retention still follow [Mobilerun privacy policy](https://cloud.mobilerun.ai/legal/privacy-policy), [terms](https://cloud.mobilerun.ai/legal/terms-of-service), and the host's policies.
 

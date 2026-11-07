@@ -104,11 +104,11 @@ class OpenAIBundleTests(unittest.TestCase):
     def test_review_cases_use_supported_profile_tools(self):
         review = json.loads(self.read('plugin.json'))['extensions']['com.openai']['review']
         cases = review['test_cases']
-        self.assertEqual(len(cases['positive']), 5)
-        self.assertEqual(len(cases['negative']), 3)
-        # Prepared read-only review cases; verify the actual tool inventory per connection.
+        self.assertEqual(len(cases['positive']), 6)
+        self.assertEqual(len(cases['negative']), 4)
+        # Includes explicitly authorized provisioning; verify inventory per connection.
         supported = {'list_devices', 'get_device', 'list_apps_on_device',
-                     'list_tasks', 'get_task_status'}
+                     'list_tasks', 'get_task_status', 'create_device'}
         for case in cases['positive']:
             with self.subTest(prompt=case['prompt']):
                 tools = {name.strip() for name in case['tools_triggered'].split(',')}
@@ -122,6 +122,20 @@ class OpenAIBundleTests(unittest.TestCase):
         strict_no_spend = cases['negative'][2]
         self.assertEqual(strict_no_spend['tools_triggered'], 'none (local validation only)')
         self.assertIn('Do not make a live API/MCP call', strict_no_spend['expected_behavior'])
+
+    def test_device_creation_review_cases_respect_slots_and_free_quota(self):
+        cases = json.loads(self.read('plugin.json'))['extensions']['com.openai']['review']['test_cases']
+        android = next(case for case in cases['positive'] if 'Android cloud phone' in case['description'])
+        self.assertIn('create_device', android['tools_triggered'])
+        for term in ('android_cloud_phone', 'free quota', 'concurrency', 'Do not purchase'):
+            self.assertIn(term, android['expected_behavior'])
+        ios = next(case for case in cases['negative'] if 'iOS' in case['description'])
+        self.assertEqual(ios['tools_triggered'], 'list_devices (no create_device)')
+        self.assertEqual(ios['prompt'], 'Create an iPhone using my included quota. Do not purchase anything.')
+        for hint in ('slot', 'eligible', 'android', 'free minutes'):
+            self.assertNotIn(hint, ios['prompt'].lower())
+        for term in ('Do not call create_device', 'slot', 'Do not silently substitute Android'):
+            self.assertIn(term, ios['expected_behavior'])
 
     def test_listing_assets_and_links(self):
         interface = json.loads(self.read('plugin.json'))['extensions']['com.openai']['interface']
@@ -165,7 +179,7 @@ class OpenAIBundleTests(unittest.TestCase):
 class MarketplaceArtifactTests(unittest.TestCase):
     def test_openclaw_archive_matches_bundle(self):
         package = ROOT / 'plugins/openclaw'
-        target = ROOT / 'mobilerun-openclaw.zip'
+        target = ROOT / 'zip' / 'mobilerun-openclaw.zip'
         self.assertTrue(target.is_file(), 'Missing OpenClaw bundle archive')
         with zipfile.ZipFile(target) as archive:
             self.assertIsNone(archive.testzip())
@@ -201,7 +215,7 @@ class MarketplaceArtifactTests(unittest.TestCase):
 
     def test_openai_upload_matches_source_and_has_root_mcp(self):
         package = ROOT / 'plugins/openai'
-        with zipfile.ZipFile(ROOT / 'mobilerun-openai.zip') as archive:
+        with zipfile.ZipFile(ROOT / 'zip' / 'mobilerun-openai.zip') as archive:
             self.assertIsNone(archive.testzip())
             files = {p.relative_to(package).as_posix(): p.read_bytes()
                      for p in package.rglob('*') if p.is_file()}

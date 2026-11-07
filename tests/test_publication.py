@@ -76,7 +76,7 @@ class PublicationSafetyTests(unittest.TestCase):
                 package = ROOT / 'plugins' / provider
                 expected = {p.relative_to(package).as_posix(): p.read_bytes()
                             for p in package.rglob('*') if p.is_file()}
-                with zipfile.ZipFile(ROOT / f'mobilerun-{provider}.zip') as archive:
+                with zipfile.ZipFile(ROOT / 'zip' / f'mobilerun-{provider}.zip') as archive:
                     entries = [entry for entry in archive.infolist() if not entry.is_dir()]
                     self.assertEqual(len(entries), len(expected))
                     self.assertEqual({entry.filename for entry in entries}, set(expected))
