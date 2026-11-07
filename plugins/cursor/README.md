@@ -16,7 +16,9 @@ The dedicated `/api/mcp/cursor` profile is deferred: that public route and its O
 
 ## Privacy and terms
 
-Service-side processing is covered by the [Mobilerun privacy policy](https://cloud.mobilerun.ai/legal/privacy-policy) and [terms of service](https://cloud.mobilerun.ai/legal/terms-of-service), as well as Cursor's applicable policies.
+When you use the hosted MCP connection, Cursor sends the tool requests and arguments needed for your actions to Mobilerun; results are returned to Cursor. Depending on what you do, this can include task instructions, device and app information, screen content, screenshots, action histories, and results. Avoid sending secrets or sensitive data you are not authorized to share. Browser OAuth credentials are entered in the sign-in flow, not in the plugin files.
+
+Review the [Mobilerun privacy policy](https://cloud.mobilerun.ai/legal/privacy-policy), [data processing agreement](https://cloud.mobilerun.ai/legal/dpa), and [terms of service](https://cloud.mobilerun.ai/legal/terms-of-service), as well as Cursor's applicable policies. The privacy policy describes use of anonymized trajectories and usage data for service improvement and AI model training.
 
 ## Public submission
 
@@ -24,8 +26,8 @@ Use [Cursor Marketplace publishing](https://cursor.com/marketplace/publish) only
 
 ## Provenance and license
 
-Based on the Cursor plugin from [droidrun/mobilerun-mcp](https://github.com/droidrun/mobilerun-mcp). The MCP URL and README were updated November 5, 2026 to use the public API endpoint and document installation and verification boundaries. Shared onboarding and mobile-tasks skills were added November 6, 2026. The upstream Apache-2.0 license and attribution are retained; this package is not relicensed under the surrounding repository's MIT license.
+Based on the Cursor plugin from droidrun/mobilerun-mcp. See the [Mobilerun MCP documentation](https://docs.mobilerun.ai/mcp-server). The MCP URL and README were updated November 5, 2026 to use the API endpoint and document installation and verification boundaries. Shared onboarding and mobile-tasks skills were added November 6, 2026. The upstream Apache-2.0 license and attribution are retained; this package is not relicensed under the surrounding repository's MIT license.
 
-Support: <https://github.com/droidrun/mobilerun-mcp/issues>
+Support: <https://docs.mobilerun.ai/support>
 
 Official references: [local installation](https://cursor.com/docs/plugins#test-plugins-locally), [manifest and submission](https://cursor.com/docs/reference/plugins).

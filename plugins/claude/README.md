@@ -6,7 +6,13 @@ The two bundled skills are `onboarding` (connection and first-device setup) and 
 
 ## Install in Claude chat
 
-This is a source bundle, not a published directory listing. Follow the repository's [archive build and validation instructions](../../README.md#check-locally) to create `mobilerun-claude.zip` containing only this package.
+This is a source bundle, not a published directory listing. To create an upload archive from this plugin folder, run:
+
+```bash
+zip -r mobilerun-claude.zip .claude-plugin .mcp.json README.md LICENSE skills assets
+```
+
+This includes only the plugin's manifest, connector configuration, documentation, license, skills, and icon. From a repository checkout, you can instead run `python3 scripts/package_plugins.py` at the repository root; the Claude archive is written to `zip/mobilerun-claude.zip`.
 
 The archive must have `.claude-plugin/plugin.json` at its root, or inside a single top-level folder. Do not zip the whole repository. In Claude, choose **Customize > Plugins > Add > Upload plugin**, select the archive, and open the Mobilerun plugin's **Connectors** tab. Add/connect Mobilerun and follow the browser OAuth flow. Actual Claude login remains unverified; if the required flow is unavailable, record BLOCKED. Team/Enterprise users may first need an Owner to add the connector.
 
@@ -30,6 +36,8 @@ Tasks and devices may be billable. Onboarding does not buy resources or run a bi
 ## Data and authorization
 
 Claude sends the tool arguments needed for your requested operations to Mobilerun through the hosted MCP. Responses can include device metadata, screenshots, UI state, task output, and other account data allowed by your connection. OAuth authorization is completed in the browser and managed by the host/service. The plugin has no runtime, local data store, telemetry, or token-handling code. Mobilerun and Claude still process data under their own service policies; no plugin-local storage does not mean no service-side retention.
+
+Read the [Mobilerun Privacy Policy](https://mobilerun.ai/privacy) for data collection, use, retention, processors, and your privacy rights. It describes the use of anonymized interaction trajectories and usage data for service improvement and AI training, and says anonymized training data may be retained indefinitely. The policy also explains how organization-provided accounts are handled and how to contact Mobilerun about privacy. Only send data needed for the requested operation, and do not include credentials or unrelated conversation content in tool arguments.
 
 ## Verification
 

@@ -16,7 +16,7 @@
       "interface": {
         "displayName": "Mobilerun",
         "shortDescription": "Android devices for agents",
-        "longDescription": "Use Mobilerun's hosted MCP to inspect Android devices, list installed apps, and run mobile agent tasks from ChatGPT or Codex. Authorize access through the host's supported connection mechanism. Available tools depend on the connection's permissions; tasks and devices may consume credits or device minutes. The onboarding skill helps with connection setup and included-credit questions. Tools, task workflows, and operational guidance are provided by the MCP server.",
+        "longDescription": "Use Mobilerun's hosted MCP to inspect Android devices, list installed apps, and run mobile agent tasks from ChatGPT or Codex. Authorize access through the host's supported connection mechanism. When you request an action, ChatGPT or Codex sends its tool arguments to Mobilerun; responses may include device metadata, screenshots, UI state, and task results. Mobilerun processes this data to provide the requested service under its privacy policy. The plugin package has no runtime, local storage, or telemetry; service-side processing and retention are governed by Mobilerun's privacy policy and the host's policies. Available tools depend on connection permissions; tasks and devices may consume credits or device minutes. The onboarding skill helps with connection setup and included-credit questions. Tools, task workflows, and operational guidance are provided by the MCP server.",
         "developerName": "Droidrun",
         "category": "Developer Tools",
         "capabilities": ["Inspect Android devices", "List installed apps", "Run mobile agent tasks"],
@@ -28,6 +28,7 @@
         "logo": "./assets/logo.svg"
       },
       "review": {
+        "demo_recording_url": "https://example.com/mobilerun-demo.mp4",
         "test_cases": {
           "positive": [
             {

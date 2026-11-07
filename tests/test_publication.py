@@ -84,8 +84,11 @@ class PublicationSafetyTests(unittest.TestCase):
                         data = archive.read(entry.filename)
                         self.assertTrue(data == expected[entry.filename],
                                         f'{provider}/{entry.filename}: stale archive')
+                        # PNGs are binary. Latin-1 preserves every byte while
+                        # still exposing ASCII private-content markers to the scan.
+                        encoding = 'latin-1' if entry.filename.endswith('.png') else 'utf-8'
                         self.check_content(f'{provider}/{entry.filename}',
-                                           data.decode('utf-8'))
+                                           data.decode(encoding))
 
 
 if __name__ == '__main__':

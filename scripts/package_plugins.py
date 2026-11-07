@@ -11,7 +11,7 @@ from scripts.sync_skills import check as check_shared_skills
 
 SKILL_FILES = tuple(f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks'))
 FILES = {
-    'claude': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', *SKILL_FILES),
+    'claude': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', 'assets/icon.png', *SKILL_FILES),
     'openai': ('plugin.json', 'mcp.json', 'README.md', 'LICENSE', 'assets/logo.svg', *SKILL_FILES),
     'cursor': ('.cursor-plugin/plugin.json', 'mcp.json', 'README.md', 'LICENSE', 'assets/logo.svg', *SKILL_FILES),
     'openclaw': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', *SKILL_FILES),

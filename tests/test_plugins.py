@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import re
+import struct
 import unittest
 import xml.etree.ElementTree as ET
 import zipfile
@@ -29,9 +30,40 @@ class ClaudeBundleTests(unittest.TestCase):
         self.assertEqual(config, {'mcpServers': {'mobilerun': {
             'type': 'http', 'url': 'https://cloud.mobilerun.ai/api/mcp/claude'}}})
 
+    def test_directory_privacy_link(self):
+        from urllib.parse import urlsplit
+        manifest = json.loads(self.read('.claude-plugin/plugin.json'))
+        privacy = urlsplit(manifest.get('privacyPolicyUrl', ''))
+        self.assertEqual(privacy.scheme, 'https')
+        self.assertTrue(privacy.netloc)
+
+    def test_directory_icon_is_bundled_square_png(self):
+        manifest = json.loads(self.read('.claude-plugin/plugin.json'))
+        self.assertTrue(manifest.get('icon'), 'Missing listing icon reference')
+        icon = (PLUGIN / manifest['icon']).resolve()
+        self.assertTrue(icon.is_relative_to(PLUGIN.resolve()))
+        data = icon.read_bytes()
+        self.assertEqual(data[:8], b'\x89PNG\r\n\x1a\n')
+        self.assertEqual(data[12:16], b'IHDR')
+        width, height = struct.unpack('>II', data[16:24])
+        self.assertEqual(width, height)
+        self.assertGreaterEqual(width, 512)
+        self.assertLessEqual(width, 2048)
+        self.assertLess(len(data), 2 * 1024 * 1024)
+
+    def test_readme_links_resolve_inside_bundle(self):
+        for target in re.findall(r'\]\(([^)]+)\)', self.read('README.md')):
+            if '://' in target or target.startswith('#'):
+                continue
+            resolved = (PLUGIN / target.split('#')[0]).resolve()
+            self.assertTrue(resolved.is_relative_to(PLUGIN.resolve()),
+                            f'Link leaves installed bundle: {target}')
+            self.assertTrue(resolved.exists(), f'Missing bundled link: {target}')
+
     def test_self_contained_declarative_package(self):
         self.assertTrue(PLUGIN.is_dir(), 'Installable plugin folder missing')
         allowed = {'.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE',
+                   'assets/icon.png',
                    *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}}
         files = set()
         for path in PLUGIN.rglob('*'):
@@ -256,6 +288,18 @@ class MarketplaceArtifactTests(unittest.TestCase):
 
 
 class DocumentationTests(unittest.TestCase):
+    def test_provider_readme_links_stay_in_installed_package(self):
+        for provider in ('cursor', 'openai'):
+            package = ROOT / 'plugins' / provider
+            for target in re.findall(r'\]\(([^)]+)\)', (package / 'README.md').read_text()):
+                if '://' in target or target.startswith('#'):
+                    continue
+                with self.subTest(provider=provider, target=target):
+                    resolved = (package / target.split('#')[0]).resolve()
+                    self.assertTrue(resolved.is_relative_to(package.resolve()),
+                                    f'Link leaves installed package: {target}')
+                    self.assertTrue(resolved.exists(), f'Missing bundled link: {target}')
+
     def test_relative_links(self):
         from source_files import source_files
         paths = [p for p in source_files(ROOT) if p.suffix == '.md'
