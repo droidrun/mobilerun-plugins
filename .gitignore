@@ -4,15 +4,20 @@ desktop.ini
 __MACOSX/
 __pycache__/
 *.py[cod]
-/mobilerun-claude.zip
-/mobilerun-openai.zip
-/mobilerun-openclaw.zip
+# Generated distribution archives.
+/*.zip
+/zip/
 
 # Keep private working notes and execution evidence out of public source.
 /.superpowers/
 /docs/superpowers/
 /docs/marketplace-testing/local-preflight-*.md
-/.env
-/.env.*
-!/.env.example
+.env
+.env.*
+!.env.example
+
+# Local development credentials must never be distributed.
+/.config/mobilerun/
+/local-mcp.json
+/credentials.json
 /reports/

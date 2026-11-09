@@ -1,0 +1,35 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "test-plugin",
+  "version": "0.3.0",
+  "description": "Connect Test Plugin to a local Mobilerun MCP server using a Node.js stdio bridge.",
+  "author": {
+    "name": "Droidrun",
+    "url": "https://mobilerun.ai"
+  },
+  "homepage": "https://mobilerun.ai",
+  "license": "MIT",
+  "keywords": [
+    "mobilerun",
+    "mcp",
+    "local",
+    "openai",
+    "testing"
+  ],
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/onboarding/SKILL.md",
+      "interface": {
+        "displayName": "Test Plugin",
+        "shortDescription": "Local MCP via stdio bridge",
+        "longDescription": "Connect from a compatible desktop-local Work or Codex process through a local Node.js stdio bridge to the local Mobilerun MCP server. POSIX/macOS/Linux and Node.js 20.3 or later are required; Node.js 22 is recommended. This does not connect regular cloud ChatGPT chats. Account, device, and streaming services remain remote.",
+        "developerName": "Droidrun",
+        "category": "Developer Tools",
+        "websiteURL": "https://mobilerun.ai",
+        "supportURL": "https://docs.mobilerun.ai/support",
+        "privacyPolicyURL": "https://cloud.mobilerun.ai/legal/privacy-policy",
+        "termsOfServiceURL": "https://cloud.mobilerun.ai/legal/terms-of-service"
+      }
+    }
+  }
+}

@@ -1,14 +1,22 @@
 # Mobilerun for Claude
 
-Connect Claude chat to Mobilerun's hosted MCP to work with Android devices and agent tasks. This bundle adds account-onboarding guidance and a remote connector reference. Device workflows, tools, permissions, and operational prompts come from the MCP, not a second implementation in this plugin.
+Connect Claude chat to Mobilerun's hosted MCP to work with Android devices and agent tasks. This bundle includes practical guidance for onboarding and mobile tasks; tools, permissions, and task execution come from the MCP server.
+
+The two bundled skills are `onboarding` (connection and first-device setup) and `mobile-tasks` (device/app control and bounded tasks). Tasks and devices can consume execution credits or device minutes.
 
 ## Install in Claude chat
 
-This is a source bundle, not a published directory listing. Follow the repository's [archive build and validation instructions](../../README.md#check-locally) to create `mobilerun-claude.zip` containing only this package.
+This is a source bundle, not a published directory listing. To create an upload archive from this plugin folder, run:
+
+```bash
+zip -r mobilerun-claude.zip .claude-plugin .mcp.json README.md LICENSE skills assets
+```
+
+This includes only the plugin's manifest, connector configuration, documentation, license, skills, and icon. From a repository checkout, you can instead run `python3 scripts/package_plugins.py` at the repository root; the Claude archive is written to `zip/mobilerun-claude.zip`.
 
 The archive must have `.claude-plugin/plugin.json` at its root, or inside a single top-level folder. Do not zip the whole repository. In Claude, choose **Customize > Plugins > Add > Upload plugin**, select the archive, and open the Mobilerun plugin's **Connectors** tab. Add/connect Mobilerun and follow the browser OAuth flow. Actual Claude login remains unverified; if the required flow is unavailable, record BLOCKED. Team/Enterprise users may first need an Owner to add the connector.
 
-Endpoint: `https://cloud.mobilerun.ai/api/mcp`. Follow [Mobilerun's documented OAuth instructions](https://docs.mobilerun.ai/mcp-server#oauth-authentication). No credentials belong in the package or conversation. Installing the plugin alone does not authorize access. A separate custom connector tests the MCP, not the bundled skill; inability to authenticate through that client's supported flow remains a blocker.
+Endpoint: `https://cloud.mobilerun.ai/api/mcp/claude`. Follow [Mobilerun's documented OAuth instructions](https://docs.mobilerun.ai/mcp-server#oauth-authentication). No credentials belong in the package or conversation. Installing the plugin alone does not authorize access. A separate custom connector tests the MCP, not the bundled skill; inability to authenticate through that client's supported flow remains a blocker.
 
 ## Use it
 
@@ -21,13 +29,15 @@ The onboarding skill handles setup and recovery, then returns control to MCP gui
 
 ## Credits and costs
 
-Check your current workspace, plan, offers, eligibility, and remaining balance at [Mobilerun billing](https://cloud.mobilerun.ai/billing). Use only offers actually shown in the dashboard; this plugin does not promise a fixed credit amount or an additional signup offer. Personal and shared workspaces may have different balances. This plugin cannot grant, transfer, or reset credits.
+For information about execution credits, see [Mobilerun's credits documentation](https://docs.mobilerun.ai/credits). Check the current balance in your active workspace's account settings. Personal and shared workspaces may have different balances. This plugin cannot grant, transfer, or reset credits.
 
 Tasks and devices may be billable. Onboarding does not buy resources or run a billed task as a connectivity test. Device-minute allowances and task credits are different balances; use the actual error and dashboard to choose a remedy.
 
 ## Data and authorization
 
 Claude sends the tool arguments needed for your requested operations to Mobilerun through the hosted MCP. Responses can include device metadata, screenshots, UI state, task output, and other account data allowed by your connection. OAuth authorization is completed in the browser and managed by the host/service. The plugin has no runtime, local data store, telemetry, or token-handling code. Mobilerun and Claude still process data under their own service policies; no plugin-local storage does not mean no service-side retention.
+
+Read the [Mobilerun Privacy Policy](https://mobilerun.ai/privacy) for data collection, use, retention, processors, and your privacy rights. It describes the use of anonymized interaction trajectories and usage data for service improvement and AI training, and says anonymized training data may be retained indefinitely. The policy also explains how organization-provided accounts are handled and how to contact Mobilerun about privacy. Only send data needed for the requested operation, and do not include credentials or unrelated conversation content in tool arguments.
 
 ## Verification
 

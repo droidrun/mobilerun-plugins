@@ -1,6 +1,6 @@
 # Mobilerun plugins
 
-Thin Mobilerun integration packages organized by agent provider. Each package connects to the existing MCP; tools and operational guidance stay on the server.
+Mobilerun integration packages organized by agent provider. The provider packages connect to the public MCP. Development connections are isolated from production packages.
 
 ## Available now
 
@@ -11,7 +11,19 @@ Thin Mobilerun integration packages organized by agent provider. Each package co
 | Mobilerun | Cursor | [Cursor-native package and local installation](plugins/cursor/README.md) |
 | Mobilerun | OpenClaw | [Compatible MCP bundle and publication preflight](plugins/openclaw/README.md) |
 
-All packages include a hosted MCP connection reference at `https://cloud.mobilerun.ai/api/mcp`. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication) for this endpoint; actual host login remains unverified. Claude and OpenAI also include provider-specific onboarding for connection problems and included credits. Packages do not grant credits, implement device workflows, or bundle credentials.
+All providers include the same two practical skills: `onboarding` for host connection and first-device setup, and `mobile-tasks` for device/app control and bounded agent tasks. Their MCP server tools perform the operations; tasks and devices can consume credits or minutes. Claude selects `https://cloud.mobilerun.ai/api/mcp/claude`; OpenAI selects `https://cloud.mobilerun.ai/api/mcp/openai`. Cursor and OpenClaw retain `https://cloud.mobilerun.ai/api/mcp` until their dedicated profiles are available. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication). Credentials are not bundled.
+
+## Test package
+
+The **standard cross-host MCP test setup** lives in [`testing/mcp/`](testing/mcp/README.md): a credential bridge, explicit opt-in temporary HTTPS tunnel, transport checks, and separate remote ChatGPT and Claude test ZIP builders. Its regression tests run in the normal suite with fake credentials and loopback servers. They never start Docker or a public tunnel. Runtime URLs and credentials are not committed.
+
+Use `python3 testing/mcp/setup.py --help` for the test lifecycle and `python3 testing/mcp/package_plugins.py --help` for remote ZIP generation. ChatGPT Work was reported working with this setup; regular-chat tool attachment and native Claude use remain separate host checks. Public exposure is never automatic.
+
+The optional local-only fallback remains separate:
+
+[Test Plugin](plugins/test-plugin/README.md) version 0.3.0 connects through a local Node.js stdio bridge to `http://localhost:8080/mcp/openai`. It requires a compatible desktop-local execution environment, Node.js 20.3 or later, the local MCP server, and an API key stored outside the plugin. Use a maintained Node.js release. Its ZIP is generated under the Git-ignored `zip/` directory. This is not the cloud OAuth connector and does not enable localhost access from regular cloud-backed ChatGPT chats; authenticated host execution and live streaming must be verified separately.
+
+The device-streaming experiment is isolated in a separate worktree on branch `mcp-device-streaming`; it is not included in this branch's plugin packages or ZIP exports.
 
 ## Repository convention
 
@@ -20,6 +32,7 @@ plugins/<provider>/            # self-contained installable package
 .agents/plugins/marketplace.json # OpenAI repo-local testing catalog
 docs/providers.md              # provider targets, routes, and evidence
 tests/                         # local package validation
+testing/mcp/                   # standard bridge/tunnel test setup and remote ZIP builders
 ```
 
 Add providers directly under `plugins/`; no `projects/mobilerun` nesting. Each provider folder owns its required manifest/configuration, README, license, and optional skills. Choose the native provider format rather than copying a Claude manifest into another provider. Avoid symlinks or references outside the installable folder. Add shared tooling only after actual packages need it. See [package boundaries and account guidance](plugins/README.md).
@@ -28,25 +41,16 @@ See the [provider overview](docs/providers.md) for package formats and verificat
 
 ## Check locally
 
-No dependency installation or compilation is needed. ZIPs are generated locally and are not committed. From the repository root, build them before running the tests; repeat this after changing any package file:
+The production provider packages need no dependency installation or compilation. ZIPs are generated locally and are not committed. Build the four production archives independently of Test Plugin:
 
 ```bash
-python3 - <<'PY'
-from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile
+python3 scripts/package_plugins.py
+```
 
-for provider in ('claude', 'openai', 'openclaw'):
-    package = Path('plugins') / provider
-    files = sorted(package.rglob('*'))
-    if any(path.is_symlink() for path in files):
-        raise SystemExit(f'Refusing symlink in {package}')
-    target = Path(f'mobilerun-{provider}.zip')
-    with ZipFile(target, 'w', compression=ZIP_DEFLATED) as archive:
-        for path in files:
-            if path.is_file():
-                archive.writestr(path.relative_to(package).as_posix(), path.read_bytes())
-    print(target)
-PY
+The local adapter and credential setup helper belong only to Test Plugin, not production. Build its separate archive explicitly before running the full repository test suite:
+
+```bash
+python3 scripts/package_test_plugin.py
 ```
 
 Then validate the generated artifacts and source:
@@ -56,7 +60,9 @@ python3 -B -m unittest discover -s tests -v
 claude plugin validate plugins/claude
 ```
 
-The Claude command requires its CLI. Static checks validate the bundle's shape, not live OAuth, agent decisions, or marketplace acceptance. Follow each package README for upload packaging and manual scenarios. Every file under a provider package is shipped; do not put credentials or development scratch files there.
+Both builders write their default archives to Git-ignored `zip/`. Explicit file lists exclude development dependencies and secrets. Only the separately built Test Plugin includes the local bridge and setup helper; its credential file remains outside the package.
+
+The Claude command requires its CLI. Static checks validate the bundle's shape, not live OAuth, agent decisions, or marketplace acceptance. Follow each package README for upload packaging and manual scenarios. Hosted provider folders ship directly; experimental source/build packages use an explicit runtime-file allowlist. Never put credentials or development scratch files in an upload.
 
 ## Distribution
 
@@ -64,7 +70,7 @@ Review the [public-content checklist](docs/publication.md) before sharing reposi
 
 For Claude chat, upload a ZIP of the provider folder to test privately. A public directory listing requires separate plugin-bundle and MCP connector submissions, which can be paired under the same organization and endpoint. No publishing is performed by this repository's tests.
 
-For OpenAI, the repo-local marketplace points only to `plugins/openai`. Use the ChatGPT desktop app for full local-package testing, or connect the hosted MCP separately in ChatGPT web. Public ZIP submission, domain verification, OAuth/tool scans, reviewer access, and recorded test evidence are separate steps.
+For OpenAI, the repo-local marketplace includes the hosted `plugins/openai` and the separate local-development `plugins/test-plugin`. Test Plugin requires a desktop-local mode capable of launching its bridge; merely using the ChatGPT desktop app does not make a cloud-backed chat local. Connect the hosted MCP separately for regular ChatGPT chats. The hosted package remains remote even when installed locally. Account/device APIs and streams remain remote services. Public ZIP submission, identity/domain verification, authentication/tool scans, reviewer access, and recorded test evidence are separate steps.
 
 ## License
 

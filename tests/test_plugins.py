@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import re
+import struct
 import unittest
 import xml.etree.ElementTree as ET
 import zipfile
@@ -27,12 +28,43 @@ class ClaudeBundleTests(unittest.TestCase):
     def test_remote_oauth_configuration(self):
         config = json.loads(self.read('.mcp.json'))
         self.assertEqual(config, {'mcpServers': {'mobilerun': {
-            'type': 'http', 'url': 'https://cloud.mobilerun.ai/api/mcp'}}})
+            'type': 'http', 'url': 'https://cloud.mobilerun.ai/api/mcp/claude'}}})
+
+    def test_directory_privacy_link(self):
+        from urllib.parse import urlsplit
+        manifest = json.loads(self.read('.claude-plugin/plugin.json'))
+        privacy = urlsplit(manifest.get('privacyPolicyUrl', ''))
+        self.assertEqual(privacy.scheme, 'https')
+        self.assertTrue(privacy.netloc)
+
+    def test_directory_icon_is_bundled_square_png(self):
+        manifest = json.loads(self.read('.claude-plugin/plugin.json'))
+        self.assertTrue(manifest.get('icon'), 'Missing listing icon reference')
+        icon = (PLUGIN / manifest['icon']).resolve()
+        self.assertTrue(icon.is_relative_to(PLUGIN.resolve()))
+        data = icon.read_bytes()
+        self.assertEqual(data[:8], b'\x89PNG\r\n\x1a\n')
+        self.assertEqual(data[12:16], b'IHDR')
+        width, height = struct.unpack('>II', data[16:24])
+        self.assertEqual(width, height)
+        self.assertGreaterEqual(width, 512)
+        self.assertLessEqual(width, 2048)
+        self.assertLess(len(data), 2 * 1024 * 1024)
+
+    def test_readme_links_resolve_inside_bundle(self):
+        for target in re.findall(r'\]\(([^)]+)\)', self.read('README.md')):
+            if '://' in target or target.startswith('#'):
+                continue
+            resolved = (PLUGIN / target.split('#')[0]).resolve()
+            self.assertTrue(resolved.is_relative_to(PLUGIN.resolve()),
+                            f'Link leaves installed bundle: {target}')
+            self.assertTrue(resolved.exists(), f'Missing bundled link: {target}')
 
     def test_self_contained_declarative_package(self):
         self.assertTrue(PLUGIN.is_dir(), 'Installable plugin folder missing')
-        allowed = {'.claude-plugin/plugin.json', '.mcp.json', 'README.md',
-                   'LICENSE', 'skills/onboarding/SKILL.md'}
+        allowed = {'.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE',
+                   'assets/icon.png',
+                   *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}}
         files = set()
         for path in PLUGIN.rglob('*'):
             self.assertFalse(path.is_symlink(), f'Symlink in bundle: {path}')
@@ -48,6 +80,11 @@ class ClaudeBundleTests(unittest.TestCase):
         self.assertEqual(match[1], 'onboarding')
         self.assertTrue(match[2].startswith('Use when'))
         self.assertLess(len(match[0]), 1024)
+
+    def test_exact_two_skills_are_packaged(self):
+        for name in ('onboarding', 'mobile-tasks'):
+            text = self.read(f'skills/{name}/SKILL.md')
+            self.assertIn(f'name: {name}', text)
 
     def test_listing_and_license(self):
         prose = re.sub(r'```.*?```', '', self.read('README.md'), flags=re.S)
@@ -94,16 +131,16 @@ class OpenAIBundleTests(unittest.TestCase):
             '$schema': 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json',
             'mcpServers': {'mobilerun': {
                 'type': 'streamable-http',
-                'url': 'https://cloud.mobilerun.ai/api/mcp'}}})
+                'url': 'https://cloud.mobilerun.ai/api/mcp/openai'}}})
 
     def test_review_cases_use_supported_profile_tools(self):
         review = json.loads(self.read('plugin.json'))['extensions']['com.openai']['review']
         cases = review['test_cases']
-        self.assertEqual(len(cases['positive']), 5)
-        self.assertEqual(len(cases['negative']), 3)
-        # Prepared read-only review cases; verify the actual tool inventory per connection.
+        self.assertEqual(len(cases['positive']), 6)
+        self.assertEqual(len(cases['negative']), 4)
+        # Includes explicitly authorized provisioning; verify inventory per connection.
         supported = {'list_devices', 'get_device', 'list_apps_on_device',
-                     'list_tasks', 'get_task_status'}
+                     'list_tasks', 'get_task_status', 'create_device'}
         for case in cases['positive']:
             with self.subTest(prompt=case['prompt']):
                 tools = {name.strip() for name in case['tools_triggered'].split(',')}
@@ -114,6 +151,23 @@ class OpenAIBundleTests(unittest.TestCase):
             self.assertTrue(case['description'])
             self.assertTrue(case['prompt'])
             self.assertTrue(case['expected_behavior'])
+        strict_no_spend = cases['negative'][2]
+        self.assertEqual(strict_no_spend['tools_triggered'], 'none (local validation only)')
+        self.assertIn('Do not make a live API/MCP call', strict_no_spend['expected_behavior'])
+
+    def test_device_creation_review_cases_respect_slots_and_free_quota(self):
+        cases = json.loads(self.read('plugin.json'))['extensions']['com.openai']['review']['test_cases']
+        android = next(case for case in cases['positive'] if 'Android cloud phone' in case['description'])
+        self.assertIn('create_device', android['tools_triggered'])
+        for term in ('android_cloud_phone', 'free quota', 'concurrency', 'Do not purchase'):
+            self.assertIn(term, android['expected_behavior'])
+        ios = next(case for case in cases['negative'] if 'iOS' in case['description'])
+        self.assertEqual(ios['tools_triggered'], 'list_devices (no create_device)')
+        self.assertEqual(ios['prompt'], 'Create an iPhone using my included quota. Do not purchase anything.')
+        for hint in ('slot', 'eligible', 'android', 'free minutes'):
+            self.assertNotIn(hint, ios['prompt'].lower())
+        for term in ('Do not call create_device', 'slot', 'Do not silently substitute Android'):
+            self.assertIn(term, ios['expected_behavior'])
 
     def test_listing_assets_and_links(self):
         interface = json.loads(self.read('plugin.json'))['extensions']['com.openai']['interface']
@@ -141,15 +195,14 @@ class OpenAIBundleTests(unittest.TestCase):
             if path.is_file():
                 files.add(path.relative_to(self.plugin).as_posix())
         self.assertEqual(files, {'plugin.json', 'mcp.json', 'README.md', 'LICENSE',
-                                'assets/logo.svg', 'skills/onboarding/SKILL.md'})
+                                 'assets/logo.svg', *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}})
         self.assertEqual(self.read('LICENSE'), (ROOT / 'LICENSE').read_text())
 
     def test_marketplace_resolves_openai_package(self):
         path = ROOT / '.agents/plugins/marketplace.json'
         self.assertTrue(path.is_file(), 'Missing OpenAI local marketplace')
         marketplace = json.loads(path.read_text())
-        self.assertEqual(len(marketplace['plugins']), 1)
-        entry = marketplace['plugins'][0]
+        entry = next(item for item in marketplace['plugins'] if item['name'] == 'mobilerun')
         self.assertEqual(entry['source'], {'source': 'local', 'path': './plugins/openai'})
         self.assertTrue((ROOT / entry['source']['path'] / 'plugin.json').is_file())
         self.assertEqual(entry['policy']['authentication'], 'ON_INSTALL')
@@ -158,7 +211,7 @@ class OpenAIBundleTests(unittest.TestCase):
 class MarketplaceArtifactTests(unittest.TestCase):
     def test_openclaw_archive_matches_bundle(self):
         package = ROOT / 'plugins/openclaw'
-        target = ROOT / 'mobilerun-openclaw.zip'
+        target = ROOT / 'zip' / 'mobilerun-openclaw.zip'
         self.assertTrue(target.is_file(), 'Missing OpenClaw bundle archive')
         with zipfile.ZipFile(target) as archive:
             self.assertIsNone(archive.testzip())
@@ -189,12 +242,12 @@ class MarketplaceArtifactTests(unittest.TestCase):
             self.assertFalse(path.is_symlink())
             if path.is_file():
                 files.add(path.relative_to(package).as_posix())
-        self.assertEqual(files, {'.claude-plugin/plugin.json', '.mcp.json',
-                                 'README.md', 'LICENSE'})
+        self.assertEqual(files, {'.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE',
+                                 *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}})
 
     def test_openai_upload_matches_source_and_has_root_mcp(self):
         package = ROOT / 'plugins/openai'
-        with zipfile.ZipFile(ROOT / 'mobilerun-openai.zip') as archive:
+        with zipfile.ZipFile(ROOT / 'zip' / 'mobilerun-openai.zip') as archive:
             self.assertIsNone(archive.testzip())
             files = {p.relative_to(package).as_posix(): p.read_bytes()
                      for p in package.rglob('*') if p.is_file()}
@@ -205,7 +258,7 @@ class MarketplaceArtifactTests(unittest.TestCase):
             config = json.loads(archive.read('mcp.json'))
             self.assertEqual(len(config['mcpServers']), 1)
             self.assertEqual(config['mcpServers']['mobilerun']['url'],
-                             'https://cloud.mobilerun.ai/api/mcp')
+                             'https://cloud.mobilerun.ai/api/mcp/openai')
 
     def test_cursor_package_is_self_contained_and_credential_free(self):
         package = ROOT / 'plugins/cursor'
@@ -224,13 +277,33 @@ class MarketplaceArtifactTests(unittest.TestCase):
             if path.is_file():
                 self.assertNotIn(path.suffix, {'.pyc', '.exe', '.dylib', '.so'})
                 self.assertNotIn(path.name, {'.DS_Store', '.env'})
+        self.assertTrue((package / 'skills/onboarding/SKILL.md').is_file())
+        for name in ('mobile-tasks',):
+            self.assertTrue((package / f'skills/{name}/SKILL.md').is_file())
+
+    def test_all_host_packages_have_synced_shared_skill_sources(self):
+        from scripts.sync_skills import PROVIDERS, check
+        self.assertEqual(set(PROVIDERS), {'claude', 'openai', 'cursor', 'openclaw', 'test-plugin'})
+        self.assertEqual(check(ROOT), [])
 
 
 class DocumentationTests(unittest.TestCase):
+    def test_provider_readme_links_stay_in_installed_package(self):
+        for provider in ('cursor', 'openai'):
+            package = ROOT / 'plugins' / provider
+            for target in re.findall(r'\]\(([^)]+)\)', (package / 'README.md').read_text()):
+                if '://' in target or target.startswith('#'):
+                    continue
+                with self.subTest(provider=provider, target=target):
+                    resolved = (package / target.split('#')[0]).resolve()
+                    self.assertTrue(resolved.is_relative_to(package.resolve()),
+                                    f'Link leaves installed package: {target}')
+                    self.assertTrue(resolved.exists(), f'Missing bundled link: {target}')
+
     def test_relative_links(self):
-        paths = [ROOT / 'README.md']
-        paths += list((ROOT / 'docs').rglob('*.md'))
-        paths += list((ROOT / 'plugins').rglob('*.md'))
+        from source_files import source_files
+        paths = [p for p in source_files(ROOT) if p.suffix == '.md'
+                 and (p == ROOT / 'README.md' or p.relative_to(ROOT).parts[0] in {'docs', 'plugins'})]
         for path in paths:
             for target in re.findall(r'\]\(([^)]+)\)', path.read_text()):
                 if '://' in target or target.startswith('#'):
