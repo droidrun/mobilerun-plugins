@@ -20,3 +20,7 @@ Retain required license notices and attribution, public product/support links, t
 4. Review recorded demonstrations and reviewer materials separately. Share private credentials and evidence only through the provider's approved private channel.
 
 Repository checks do not establish live authentication, provider approval, or release provenance. Inspect the exact committed source and final artifact before submission.
+
+For Cursor company attribution, the submission note, and publisher-ownership checks, use the [Cursor company submission checklist](cursor-submission.md).
+
+For the production artifact list, build commands, and remaining host/portal checks, use the [publishing handoff](release-readiness.md).

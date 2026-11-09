@@ -1,4 +1,4 @@
-"""Provider routing and archive parity; missing deployed profiles retain working URLs."""
+"""Selected provider routing and archive parity; not deployment verification."""
 import json
 from pathlib import Path
 import unittest
@@ -7,9 +7,9 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = {
     'claude': ('.mcp.json', 'claude'),
-    # Their provider-specific public routes currently return 404. Do not ship a broken URL.
-    'cursor': ('mcp.json', None),
+    'cursor': ('mcp.json', 'cursor'),
     'openai': ('mcp.json', 'openai'),
+    # OpenClaw retains the base route pending its dedicated profile.
     'openclaw': ('.mcp.json', None),
     'test-plugin': ('mcp.json', 'local'),
 }

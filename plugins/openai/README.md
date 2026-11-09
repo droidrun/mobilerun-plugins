@@ -42,7 +42,7 @@ Upload **only this package** through [OpenAI Plugins](https://platform.openai.co
 
 Developer/domain verification, authentication checks, and marketplace review are separate from package installation. Follow the provider's current submission requirements; this source package does not establish approval.
 
-The manifest's `review.demo_recording_url` is currently `https://example.com/mobilerun-demo.mp4`, an explicit placeholder only. It is not a real or verified demo recording; replace it with an accessible reviewer video before submitting. Review cases are draft materials and have not been run against a reviewer account. OpenAI's current submission guide requires five positive and three negative cases and an accessible walkthrough video for MCP review.
+The manifest's `review.demo_recording_url` points to the [Mobilerun demo recording](https://www.loom.com/share/646c25f3773841f89164a0a12065e79b). Before submitting, verify that reviewers can watch it without signing in or requesting access and that it demonstrates the submitted review cases. Video accessibility and coverage have not been verified by the repository checks. Review cases are draft materials and have not been run against a reviewer account. OpenAI's current submission guide requires five positive and three negative cases and an accessible walkthrough video for MCP review.
 
 ## Verification boundaries
 

@@ -1,0 +1,19 @@
+{
+  "description": "Supplemental resource-entitlement scenarios for manual review and structural regression checks. Not executed against a live account by the unit suite and not included in the submitted plugin's five positive and three negative cases.",
+  "positive": [
+    {
+      "description": "Create an Android cloud phone using available free quota",
+      "prompt": "Create one Android cloud phone using my included quota. Do not purchase anything or use paid fallback.",
+      "tools_triggered": "list_devices, create_device, get_device",
+      "expected_behavior": "Use a prepared workspace with verified remaining free quota for Android device minutes and available concurrency. The explicit request authorizes one create_device call with device type android_cloud_phone using the exposed schema. An iOS subscription slot is not required for this Android quota path. Do not purchase capacity, enable paid fallback, or assume free quota exists in other workspaces. If included-only execution cannot be ensured by the exposed tool and workspace controls, stop and explain instead of provisioning. On a returned quota or entitlement error, stop without a duplicate create. Otherwise retain the returned device ID, poll readiness within the onboarding budget, and report its actual state; do not run an agent task."
+    }
+  ],
+  "negative": [
+    {
+      "description": "Do not create iOS without an eligible slot",
+      "prompt": "Create an iPhone using my included quota. Do not purchase anything.",
+      "tools_triggered": "list_devices (no create_device)",
+      "expected_behavior": "Reviewer setup, not part of the user prompt: use a workspace with verified remaining Android free quota and concurrency capacity, but no eligible iOS slot. Do not call create_device for iOS when the workspace is known to lack an eligible iOS slot. If eligibility is not exposed, explain that it must be verified rather than attempting creation to discover it. Explain that Android free quota does not grant an iOS entitlement. Do not purchase or add a slot, bypass the restriction, or repeatedly retry provisioning. Do not silently substitute Android: explain that an Android cloud phone can use remaining included Android quota subject to concurrency and ask whether the user wants that alternative before creating it. Do not add plan lists, upgrade prompts, or checkout links."
+    }
+  ]
+}
