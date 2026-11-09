@@ -5,7 +5,7 @@ description: Use when a user connects Mobilerun in Cursor, has no devices, wants
 
 # Get started with Mobilerun in Cursor
 
-For an already connected account, continue below. Otherwise enable the Mobilerun plugin in Cursor and open its MCP connection controls. This package uses `https://cloud.mobilerun.ai/api/mcp`. Select Connect and complete browser OAuth: sign in or sign up at [Mobilerun Cloud](https://cloud.mobilerun.ai), complete any email verification, and approve access. Return to Cursor to use its Mobilerun tools. Keep passwords, tokens and sign-in codes in the browser flow.
+For an already connected account, continue below. Otherwise enable the Mobilerun plugin in Cursor and open its MCP connection controls. This package uses `https://cloud.mobilerun.ai/api/mcp/cursor`. Select Connect and complete browser OAuth: sign in or sign up at [Mobilerun Cloud](https://cloud.mobilerun.ai), complete any email verification, and approve access. Return to Cursor to use its Mobilerun tools. If the dedicated route is unavailable, report the connection failure rather than silently switching to the broader base endpoint. Keep passwords, tokens and sign-in codes in the browser flow.
 
 <!-- BEGIN SHARED FIRST DEVICE -->
 ## Connect and choose a goal

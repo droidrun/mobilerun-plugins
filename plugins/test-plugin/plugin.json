@@ -8,6 +8,7 @@
     "url": "https://mobilerun.ai"
   },
   "homepage": "https://mobilerun.ai",
+  "repository": "https://github.com/droidrun/mobilerun-plugins",
   "license": "MIT",
   "keywords": [
     "mobilerun",

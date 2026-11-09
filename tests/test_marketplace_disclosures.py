@@ -15,8 +15,8 @@ class MarketplaceDisclosureTests(unittest.TestCase):
 
         manifest = json.loads((ROOT / "plugins/openai/plugin.json").read_text())
         cases = manifest["extensions"]["com.openai"]["review"]["test_cases"]
-        self.assertEqual(len(cases["positive"]), 6)
-        self.assertEqual(len(cases["negative"]), 4)
+        self.assertEqual(len(cases["positive"]), 5)
+        self.assertEqual(len(cases["negative"]), 3)
         texts = " ".join(case["expected_behavior"] for case in cases["negative"])
         self.assertIn("unrelated promotions", texts.lower())
         self.assertIn("upgrade", texts.lower())

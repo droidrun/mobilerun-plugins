@@ -2,6 +2,7 @@
   "name": "mobilerun",
   "displayName": "Mobilerun",
   "version": "0.1.0",
+  "repository": "https://github.com/droidrun/mobilerun-plugins",
   "icon": "assets/icon.png",
   "privacyPolicyUrl": "https://mobilerun.ai/privacy",
   "description": "Connect Claude to Mobilerun for Android device automation, with guidance for sign-in, account setup, and included credits.",

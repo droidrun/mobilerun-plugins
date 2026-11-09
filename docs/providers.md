@@ -24,7 +24,7 @@ Official documentation checked November 5, 2026:
 
 Official [packaging](https://developers.openai.com/plugins/build/plugins) and [submission](https://developers.openai.com/plugins/deploy/submission) docs checked November 5, 2026 support portable root `plugin.json`, `mcp.json` with `streamable-http`, and `extensions.com.openai.onboardingSkill`. The bundle has listing links, the existing Mobilerun logo, and five positive/three negative proposed review cases. Cases have not been run against a reviewer account.
 
-The hosted OpenAI package selects `https://cloud.mobilerun.ai/api/mcp/openai`; Claude selects `/api/mcp/claude`. Cursor and OpenClaw retain the base `https://cloud.mobilerun.ai/api/mcp` pending their dedicated profiles. Mobilerun documents [OAuth auto-discovery and browser authentication](https://docs.mobilerun.ai/mcp-server#oauth-authentication). Connect through the host's OAuth flow; actual login in each host remains unverified. Do not put credentials in distributed bundles or chat. The canonical portable MCP schema disallows per-server `extensions`, although OpenAI documents an auth extension there. Advanced overrides require checking the portal's accepted schema. Missing required authentication support remains a review blocker; do not use `none` for this protected endpoint.
+The hosted OpenAI package selects `https://cloud.mobilerun.ai/api/mcp/openai`; Claude selects `/api/mcp/claude`; Cursor selects `/api/mcp/cursor`, with deployment and authenticated filtering still unverified. OpenClaw retains the base `https://cloud.mobilerun.ai/api/mcp` pending its dedicated profile. Mobilerun documents [OAuth auto-discovery and browser authentication](https://docs.mobilerun.ai/mcp-server#oauth-authentication). Connect through the host's OAuth flow; actual login in each host remains unverified. Do not put credentials in distributed bundles or chat. The canonical portable MCP schema disallows per-server `extensions`, although OpenAI documents an auth extension there. Advanced overrides require checking the portal's accepted schema. Missing required authentication support remains a review blocker; do not use `none` for this protected endpoint.
 
 The repo-local marketplace supports desktop authoring/testing. It does not publish to ChatGPT web or the public directory. A separate custom-MCP connection tests only the hosted server. Marketplace verification and approval are not established by these source packages.
 
@@ -39,7 +39,7 @@ Production packaging (`python3 scripts/package_plugins.py`) builds only the four
 | Claude | `/api/mcp/claude` | Profile-specific unauthenticated OAuth discovery verified. |
 | OpenAI | `/api/mcp/openai` | Profile-specific unauthenticated OAuth discovery verified. |
 | Test Plugin | `http://localhost:8080/mcp/openai` via stdio bridge | Local server and API key required; live host connection unverified. |
-| Cursor | `/api/mcp` retained | `/api/mcp/cursor` and its OAuth resource metadata returned 404; dedicated profile deferred. |
+| Cursor | `/api/mcp/cursor` selected | Dedicated route and OAuth metadata previously returned 404; current deployment and authenticated tool filtering require verification. |
 | OpenClaw | `/api/mcp` retained | `/api/mcp/openclaw` and its OAuth resource metadata returned 404; dedicated profile deferred. |
 
 These checks do not establish authenticated tool access or UI compatibility. Cursor/OpenClaw are not silently mapped to another provider's profile; their existing base connection remains until those profiles are added.

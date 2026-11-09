@@ -20,7 +20,7 @@ HOST = 'https://cloud.mobilerun.ai/api/mcp'
 CONNECTORS = {
     'claude': {'type': 'http', 'url': HOST + '/claude'},
     'openai': {'type': 'streamable-http', 'url': HOST + '/openai'},
-    'cursor': {'url': HOST},
+    'cursor': {'url': HOST + '/cursor'},
     'openclaw': {'transport': 'streamable-http', 'url': HOST},
 }
 

@@ -136,8 +136,8 @@ class OpenAIBundleTests(unittest.TestCase):
     def test_review_cases_use_supported_profile_tools(self):
         review = json.loads(self.read('plugin.json'))['extensions']['com.openai']['review']
         cases = review['test_cases']
-        self.assertEqual(len(cases['positive']), 6)
-        self.assertEqual(len(cases['negative']), 4)
+        self.assertEqual(len(cases['positive']), 5)
+        self.assertEqual(len(cases['negative']), 3)
         # Includes explicitly authorized provisioning; verify inventory per connection.
         supported = {'list_devices', 'get_device', 'list_apps_on_device',
                      'list_tasks', 'get_task_status', 'create_device'}
@@ -156,7 +156,7 @@ class OpenAIBundleTests(unittest.TestCase):
         self.assertIn('Do not make a live API/MCP call', strict_no_spend['expected_behavior'])
 
     def test_device_creation_review_cases_respect_slots_and_free_quota(self):
-        cases = json.loads(self.read('plugin.json'))['extensions']['com.openai']['review']['test_cases']
+        cases = json.loads((ROOT / 'tests/fixtures/openai-resource-review-cases.json').read_text())
         android = next(case for case in cases['positive'] if 'Android cloud phone' in case['description'])
         self.assertIn('create_device', android['tools_triggered'])
         for term in ('android_cloud_phone', 'free quota', 'concurrency', 'Do not purchase'):
@@ -270,7 +270,7 @@ class MarketplaceArtifactTests(unittest.TestCase):
         self.assertTrue((package / 'README.md').is_file())
         self.assertTrue((package / manifest['logo']).is_file())
         self.assertEqual(json.loads((package / 'mcp.json').read_text()), {
-            'mcpServers': {'mobilerun': {'url': 'https://cloud.mobilerun.ai/api/mcp'}}})
+            'mcpServers': {'mobilerun': {'url': 'https://cloud.mobilerun.ai/api/mcp/cursor'}}})
         for path in package.rglob('*'):
             self.assertFalse(path.is_symlink())
             self.assertTrue(path.resolve().is_relative_to(package.resolve()))
