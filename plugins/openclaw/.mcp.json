@@ -1,7 +1,8 @@
 {
   "mcpServers": {
     "mobilerun": {
-      "url": "https://cloud.mobilerun.ai/api/mcp",
+      "url": "https://cloud.mobilerun.ai/api/mcp/openclaw",
+      "auth": "oauth",
       "transport": "streamable-http"
     }
   }

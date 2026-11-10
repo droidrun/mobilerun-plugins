@@ -9,8 +9,7 @@ PACKAGES = {
     'claude': ('.mcp.json', 'claude'),
     'cursor': ('mcp.json', 'cursor'),
     'openai': ('mcp.json', 'openai'),
-    # OpenClaw retains the base route pending its dedicated profile.
-    'openclaw': ('.mcp.json', None),
+    'openclaw': ('.mcp.json', 'openclaw'),
     'test-plugin': ('mcp.json', 'local'),
 }
 
@@ -30,6 +29,8 @@ class ProviderProfileTests(unittest.TestCase):
                 else:
                     expected = 'https://cloud.mobilerun.ai/api/mcp' + (f'/{profile}' if profile else '')
                     self.assertEqual(server['url'], expected)
+                    if package == 'openclaw':
+                        self.assertEqual(server['auth'], 'oauth')
                     self.assertNotIn('command', server)
                     self.assertNotIn('headers', server)
 
@@ -52,6 +53,8 @@ class ProviderProfileTests(unittest.TestCase):
                     else:
                         expected = 'https://cloud.mobilerun.ai/api/mcp' + (f'/{profile}' if profile else '')
                         self.assertEqual(server['url'], expected)
+                        if package == 'openclaw':
+                            self.assertEqual(server['auth'], 'oauth')
 
 
 if __name__ == '__main__':

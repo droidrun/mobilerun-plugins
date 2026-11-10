@@ -234,15 +234,17 @@ class MarketplaceArtifactTests(unittest.TestCase):
         self.assertRegex(manifest['version'], r'^\d+\.\d+\.\d+$')
         self.assertEqual(json.loads((package / '.mcp.json').read_text()), {
             'mcpServers': {'mobilerun': {
-                'url': 'https://cloud.mobilerun.ai/api/mcp',
+                'url': 'https://cloud.mobilerun.ai/api/mcp/openclaw',
+                'auth': 'oauth',
                 'transport': 'streamable-http'}}})
+        self.assertIn('contains no OpenClaw profile implementation', (package / 'README.md').read_text())
         self.assertEqual((package / 'LICENSE').read_text(), (ROOT / 'LICENSE').read_text())
         files = set()
         for path in package.rglob('*'):
             self.assertFalse(path.is_symlink())
             if path.is_file():
                 files.add(path.relative_to(package).as_posix())
-        self.assertEqual(files, {'.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE',
+        self.assertEqual(files, {'.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', 'assets/icon.png',
                                  *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}})
 
     def test_openai_upload_matches_source_and_has_root_mcp(self):

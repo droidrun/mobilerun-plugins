@@ -11,7 +11,7 @@ Mobilerun integration packages organized by agent provider. The provider package
 | Mobilerun | Cursor | [Cursor-native package and local installation](plugins/cursor/README.md) |
 | Mobilerun | OpenClaw | [Compatible MCP bundle and publication preflight](plugins/openclaw/README.md) |
 
-All providers include the same two practical skills: `onboarding` for host connection and first-device setup, and `mobile-tasks` for device/app control and bounded agent tasks. Their MCP server tools perform the operations; tasks and devices can consume credits or minutes. Claude selects `https://cloud.mobilerun.ai/api/mcp/claude`; OpenAI selects `https://cloud.mobilerun.ai/api/mcp/openai`. Cursor and OpenClaw retain `https://cloud.mobilerun.ai/api/mcp` until their dedicated profiles are available. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication). Credentials are not bundled.
+All providers include the same two practical skills: `onboarding` for host connection and first-device setup, and `mobile-tasks` for device/app control and bounded agent tasks. Their MCP server tools perform the operations; tasks and devices can consume credits or minutes. Claude selects `https://cloud.mobilerun.ai/api/mcp/claude`; OpenAI selects `https://cloud.mobilerun.ai/api/mcp/openai`; OpenClaw selects `https://cloud.mobilerun.ai/api/mcp/openclaw`. Cursor retains `https://cloud.mobilerun.ai/api/mcp`. The OpenClaw route is declared for its intended dedicated profile, but deployment availability is unverified and historical verification returned 404; do not substitute the broader base endpoint. Mobilerun documents [browser OAuth](https://docs.mobilerun.ai/mcp-server#oauth-authentication). Credentials are not bundled.
 
 ## Test package
 

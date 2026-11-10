@@ -5,7 +5,7 @@ description: Use when a user connects the Mobilerun compatible bundle, has no de
 
 # Get started with the Mobilerun compatible bundle
 
-For an already connected account, continue below. Otherwise install the compatible bundle and enable its MCP connection at `https://cloud.mobilerun.ai/api/mcp`. Use the host's browser OAuth flow to sign in or sign up at [Mobilerun Cloud](https://cloud.mobilerun.ai), complete any email verification, and approve access. Return to the host to use Mobilerun tools. Keep passwords, tokens and sign-in codes in that browser flow. If authorization is unavailable in the installed host, complete host connection setup first.
+For an already connected account, continue below. Otherwise install the compatible bundle, then open the Mobilerun plugin’s page and select **Sign in**, or **Accounts → Sign in**, to authorize `https://cloud.mobilerun.ai/api/mcp/openclaw` in the browser. The operator needs administrator access. Sign in or sign up at [Mobilerun Cloud](https://cloud.mobilerun.ai), complete any email verification, and approve access. Return to OpenClaw to use Mobilerun tools. Keep passwords, tokens and sign-in codes in that browser flow. Do not run `openclaw mcp login` for this plugin: it signs in only to separately saved `mcp.servers` entries. Do not configure a duplicate connector automatically. The dedicated route's deployment is unverified and historical checks returned 404; do not substitute the broader base endpoint. If the server is missing or sign-in fails, stop and contact support@mobilerun.ai.
 
 <!-- BEGIN SHARED FIRST DEVICE -->
 ## Connect and choose a goal

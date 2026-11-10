@@ -14,14 +14,14 @@ FILES = {
     'claude': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', 'assets/icon.png', *SKILL_FILES),
     'openai': ('plugin.json', 'mcp.json', 'README.md', 'LICENSE', 'assets/logo.svg', *SKILL_FILES),
     'cursor': ('.cursor-plugin/plugin.json', 'mcp.json', 'README.md', 'LICENSE', 'assets/logo.svg', *SKILL_FILES),
-    'openclaw': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', *SKILL_FILES),
+    'openclaw': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', 'assets/icon.png', *SKILL_FILES),
 }
 HOST = 'https://cloud.mobilerun.ai/api/mcp'
 CONNECTORS = {
     'claude': {'type': 'http', 'url': HOST + '/claude'},
     'openai': {'type': 'streamable-http', 'url': HOST + '/openai'},
     'cursor': {'url': HOST + '/cursor'},
-    'openclaw': {'transport': 'streamable-http', 'url': HOST},
+    'openclaw': {'auth': 'oauth', 'transport': 'streamable-http', 'url': HOST + '/openclaw'},
 }
 
 
