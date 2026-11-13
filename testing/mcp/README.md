@@ -1,5 +1,17 @@
 # Standard MCP test setup
 
+## One-file start
+
+Requires a running Docker daemon, `MOBILERUN_API_KEY` in the environment, and free loopback ports 18080 and 18081. It starts a container and uses the main `/mcp` profile.
+
+Run `source ~/.agent-env` and `./testing/mcp/start-local.sh`. It builds the image, starts a private-path proxy and temporary public tunnel, verifies MCP, and writes Codex and Claude ZIPs to `testing/mcp/zip/` (git-ignored) and `~/Downloads`. Use `--no-build` to reuse the image, `--show-url` to print the sensitive URL, or `MOBILERUN_MCP_REPO` to override the checkout. Anyone with the URL can access your account; keep the URL and ZIPs private. The URL changes on restart. Ctrl-C removes the container and stops the proxy and tunnel.
+
+---
+
+## Legacy harness
+
+The sections below describe the separate legacy harness, not the one-file launcher.
+
 Use this tracked setup for remote plugin testing instead of copying scripts from private reports.
 
 ```text
