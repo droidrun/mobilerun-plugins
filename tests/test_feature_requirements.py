@@ -5,12 +5,13 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 MOBILE = ROOT / 'shared/skills/mobile-tasks/SKILL.md'
+FEATURES = ROOT / 'shared/skills/mobile-tasks/references/features.md'
 ONBOARDING = ROOT / 'shared/onboarding-first-device.md'
 
 
 class FeatureRequirementsTests(unittest.TestCase):
     def test_mobile_conditional_resource_requirements(self):
-        text = MOBILE.read_text().lower()
+        text = FEATURES.read_text().lower()
         section = text.split('## feature requirements', 1)[-1].split('\n## ', 1)[0]
         for term in ('only', 'requested', 'limitation', 'subscription slots', 'minute',
                      'concurrency', 'execution credits', 'automation', 'numbers', 'sms',
@@ -31,13 +32,13 @@ class FeatureRequirementsTests(unittest.TestCase):
         self.assertIn('https://docs.mobilerun.ai/credits', text)
 
     def test_links_and_commerce_guard(self):
-        for path in (MOBILE, ONBOARDING):
+        for path in (FEATURES, ONBOARDING):
             text = path.read_text().lower()
             with self.subTest(path=path):
                 self.assertNotRegex(text, r'https?://cloud\.mobilerun\.ai/(billing|checkout|upgrade)')
                 self.assertNotRegex(text, r'<!--|\b(buy now|upgrade now|top up now)\b')
                 self.assertNotRegex(text, r'\b(all|every) (features?|capabilities|resources?) (require|requires) (a )?(paid|premium|upgrade)')
-        mobile = MOBILE.read_text().lower()
+        mobile = FEATURES.read_text().lower()
         self.assertIn('https://docs.mobilerun.ai/mcp-server', mobile)
         self.assertRegex(mobile, r'only (?:offer|share).{0,180}confirmed entitlement limitation')
 
@@ -46,14 +47,14 @@ class FeatureRequirementsTests(unittest.TestCase):
         self.assertEqual([p.parent.name for p in (ROOT / 'shared/skills').glob('*/SKILL.md')], ['mobile-tasks'])
 
     def test_reviewed_scope_and_recovery_guards(self):
-        mobile = MOBILE.read_text().lower()
+        mobile = FEATURES.read_text().lower()
         self.assertIn('subscription android phones', mobile)
         self.assertIn('tool/profile restrictions', mobile)
         self.assertIn('no prices, plan lists or upgrade prompts', mobile)
         recovery = next(line for line in mobile.splitlines() if '**402 or quota error:**' in line)
         for limit in ('slots', 'concurrency', 'minutes', 'credits'):
             self.assertIn(limit, recovery)
-        for path in (MOBILE, ONBOARDING):
+        for path in (FEATURES, ONBOARDING):
             text = path.read_text().lower()
             with self.subTest(path=path):
                 self.assertIn('confirmed entitlement limitation', text)

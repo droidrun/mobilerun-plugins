@@ -6,6 +6,7 @@ import struct
 import unittest
 import xml.etree.ElementTree as ET
 import zipfile
+from scripts.sync_skills import REFERENCE_FILES
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / 'plugins/claude'
@@ -64,7 +65,7 @@ class ClaudeBundleTests(unittest.TestCase):
         self.assertTrue(PLUGIN.is_dir(), 'Installable plugin folder missing')
         allowed = {'.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE',
                    'assets/icon.png',
-                   *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}}
+                   *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}, *REFERENCE_FILES}
         files = set()
         for path in PLUGIN.rglob('*'):
             self.assertFalse(path.is_symlink(), f'Symlink in bundle: {path}')
@@ -195,7 +196,7 @@ class OpenAIBundleTests(unittest.TestCase):
             if path.is_file():
                 files.add(path.relative_to(self.plugin).as_posix())
         self.assertEqual(files, {'plugin.json', 'mcp.json', 'README.md', 'LICENSE',
-                                 'assets/logo.svg', *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}})
+                                 'assets/logo.svg', *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}, *REFERENCE_FILES})
         self.assertEqual(self.read('LICENSE'), (ROOT / 'LICENSE').read_text())
 
     def test_marketplace_resolves_openai_package(self):
@@ -243,7 +244,7 @@ class MarketplaceArtifactTests(unittest.TestCase):
             if path.is_file():
                 files.add(path.relative_to(package).as_posix())
         self.assertEqual(files, {'.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE',
-                                 *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}})
+                                 *{f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')}, *REFERENCE_FILES})
 
     def test_openai_upload_matches_source_and_has_root_mcp(self):
         package = ROOT / 'plugins/openai'

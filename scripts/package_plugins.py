@@ -8,8 +8,9 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.sync_skills import check as check_shared_skills
+from scripts.sync_skills import REFERENCE_FILES
 
-SKILL_FILES = tuple(f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks'))
+SKILL_FILES = (*tuple(f'skills/{name}/SKILL.md' for name in ('onboarding', 'mobile-tasks')), *REFERENCE_FILES)
 FILES = {
     'claude': ('.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'LICENSE', 'assets/icon.png', *SKILL_FILES),
     'openai': ('plugin.json', 'mcp.json', 'README.md', 'LICENSE', 'assets/logo.svg', *SKILL_FILES),
