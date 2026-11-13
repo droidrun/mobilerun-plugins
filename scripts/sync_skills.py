@@ -44,6 +44,7 @@ def synchronize(root: Path = ROOT, check: bool = False, providers=PROVIDERS) -> 
     root = Path(root).absolute()
     shared_onboarding = _regular_file(root, 'shared/onboarding-first-device.md').read_text()
     canonical_skills = {}
+    discovered = set()
     for name in SKILLS:
         canonical_skills[f'{name}/SKILL.md'] = _regular_file(root, f'shared/skills/{name}/SKILL.md').read_text()
         references = root / f'shared/skills/{name}/references'
@@ -52,7 +53,11 @@ def synchronize(root: Path = ROOT, check: bool = False, providers=PROVIDERS) -> 
         if references.exists():
             for path in sorted(references.glob('*.md')):
                 relative = f'{name}/references/{path.name}'
+                discovered.add(f'skills/{relative}')
                 canonical_skills[relative] = _regular_file(root, f'shared/skills/{relative}').read_text()
+    if discovered != set(REFERENCE_FILES):
+        raise ValueError(f'Canonical reference inventory mismatch: missing {sorted(set(REFERENCE_FILES) - discovered)}, '
+                         f'unlisted {sorted(discovered - set(REFERENCE_FILES))}')
     pending = []
     updates = []
     for provider in providers:
@@ -79,6 +84,18 @@ def synchronize(root: Path = ROOT, check: bool = False, providers=PROVIDERS) -> 
             if not target.is_file() or target.read_text() != canonical:
                 pending.append(relative)
                 updates.append((target, canonical))
+        for name in SKILLS:
+            references = skills_dir / name / 'references'
+            if references.is_symlink():
+                raise ValueError(f'Refusing symlink path: {references}')
+            if references.exists():
+                for path in sorted(references.glob('*.md')):
+                    relative = path.relative_to(root).as_posix()
+                    _regular_file(root, relative)
+                    if f'skills/{name}/references/{path.name}' not in REFERENCE_FILES:
+                        if not check:
+                            raise ValueError(f'Stale provider reference requires removal: {relative}')
+                        pending.append(relative)
     if not check:
         for path, content in updates:
             path.parent.mkdir(parents=True, exist_ok=True)

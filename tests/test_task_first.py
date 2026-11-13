@@ -10,6 +10,21 @@ REFERENCE = 'skills/mobile-tasks/references/tasks.md'
 
 
 class TaskFirstTests(unittest.TestCase):
+    def test_ready_before_task_submission(self):
+        text = (ROOT / 'shared/skills/mobile-tasks/SKILL.md').read_text().lower()
+        first = text.split('## core loop', 1)[1].split('\n2.', 1)[0]
+        self.assertIn('`ready` before `run_task`', first)
+        self.assertIn('references/device-controls.md', first)
+
+    def test_paid_device_always_requires_approval(self):
+        for name in ('shared/skills/mobile-tasks/SKILL.md',
+                     'shared/skills/mobile-tasks/references/device-controls.md',
+                     'shared/onboarding-first-device.md'):
+            text = (ROOT / name).read_text().lower()
+            self.assertNotIn('paid device when none exists', text)
+            self.assertIn('paid device', text)
+            self.assertIn('approval', text)
+
     def test_autonomous_execution_and_safety(self):
         skill = (ROOT / 'shared/skills/mobile-tasks/SKILL.md').read_text().lower()
         tasks = (ROOT / 'shared/skills/mobile-tasks/references/tasks.md').read_text().lower()

@@ -21,7 +21,7 @@ Ask what the user wants to do only when their goal is missing. Useful starting p
 ## First useful run
 
 1. **Reuse a suitable device** from the list. Pick the best ready device, or resume a suitable stopped device without asking. Respect an explicitly requested device and spending limits. If none exists, recommend an **Android cloud phone** as the first-device option for a new user without an upgraded device plan. Keep an explicit iOS choice instead of replacing it with Android.
-2. **Create the requested phone** with `create_device` and the exposed schema: `android_cloud_phone` for Android, or `ios_phone` for an explicitly requested, eligible iOS device. Device provisioning uses plan capacity or device minutes; agent tasks use execution credits. Before creating a new paid device when none exists, explain the chosen phone and usage and get the user's go-ahead. An informed request to create it is sufficient authorization; do not ask again for the same action.
+2. **Create the requested phone** with `create_device` and the exposed schema: `android_cloud_phone` for Android, or `ios_phone` for an explicitly requested, eligible iOS device. Device provisioning uses plan capacity or device minutes; agent tasks use execution credits. Before creating any new paid device, explain the chosen phone and usage and obtain approval unless the user explicitly authorized that creation. An informed request to create it is sufficient authorization; do not ask again for the same action.
 3. **Wait for readiness.** Keep the returned device ID and poll `get_device` at a reasonable interval until `ready`, for at most 5 minutes or 10 calls, whichever comes first (or a shorter host limit). Stop immediately on `terminated` or `stopped`; `maintenance` and `unknown` may be temporary, but stop when the budget expires. If not ready, report the device ID and last verified state. Do not create a replacement without approval. If provisioning returns an error, use the recovery table below rather than creating duplicates.
 4. **Do the user's work.** Use the bundled [mobile-tasks](../mobile-tasks/SKILL.md) guide for app installation, direct phone control, a one-off agent task, or task results. No documentation lookup is needed.
 
@@ -44,5 +44,5 @@ Only when answering a relevant account/feature-requirement question or confirmed
 
 For a device goal, finish with the result, selected device and task ID. Do not narrate tool steps or offer another setup questionnaire.
 
-**Example:** “Mobilerun is connected; there are no devices yet. I'll use an Android cloud phone for your app test, wait for it to be ready, then install the app and check the login screen.”
+**Example:** “Mobilerun is connected; there are no devices yet. An Android cloud phone can use plan capacity or device minutes. May I create one for your app test?”
 <!-- END SHARED FIRST DEVICE -->
