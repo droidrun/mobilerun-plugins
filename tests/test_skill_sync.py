@@ -42,6 +42,17 @@ class SkillSyncTests(unittest.TestCase):
                 self.assertEqual((self.root / f'plugins/{provider}/skills/{name}/SKILL.md').read_text(),
                                  f'Canonical {name}')
 
+    def test_reference_files_sync_and_check_drift(self):
+        source = self.root / 'shared/skills/mobile-tasks/references/tasks.md'
+        source.parent.mkdir()
+        source.write_text('Task guidance')
+        sync.synchronize(self.root)
+        for provider in sync.PROVIDERS:
+            target = self.root / f'plugins/{provider}/skills/mobile-tasks/references/tasks.md'
+            self.assertEqual(target.read_text(), 'Task guidance')
+        target.write_text('stale')
+        self.assertIn(target.relative_to(self.root).as_posix(), sync.check(self.root))
+
     def test_cli_check_reports_drift_without_writing(self):
         before = (self.root / 'plugins/claude/skills/onboarding/SKILL.md').read_text()
         output = StringIO()

@@ -6,6 +6,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 PROVIDERS = ('claude', 'openai', 'cursor', 'openclaw', 'test-plugin')
 SKILLS = ('mobile-tasks',)
+REFERENCE_FILES = tuple(f'skills/mobile-tasks/references/{name}.md' for name in
+                        ('tasks', 'device-controls', 'features'))
 START = '<!-- BEGIN SHARED FIRST DEVICE -->'
 END = '<!-- END SHARED FIRST DEVICE -->'
 
@@ -41,10 +43,16 @@ def _replace_section(text: str, canonical: str, target: str) -> str:
 def synchronize(root: Path = ROOT, check: bool = False, providers=PROVIDERS) -> list[str]:
     root = Path(root).absolute()
     shared_onboarding = _regular_file(root, 'shared/onboarding-first-device.md').read_text()
-    canonical_skills = {
-        name: _regular_file(root, f'shared/skills/{name}/SKILL.md').read_text()
-        for name in SKILLS
-    }
+    canonical_skills = {}
+    for name in SKILLS:
+        canonical_skills[f'{name}/SKILL.md'] = _regular_file(root, f'shared/skills/{name}/SKILL.md').read_text()
+        references = root / f'shared/skills/{name}/references'
+        if references.is_symlink():
+            raise ValueError(f'Refusing symlink path: {references}')
+        if references.exists():
+            for path in sorted(references.glob('*.md')):
+                relative = f'{name}/references/{path.name}'
+                canonical_skills[relative] = _regular_file(root, f'shared/skills/{relative}').read_text()
     pending = []
     updates = []
     for provider in providers:
@@ -59,11 +67,13 @@ def synchronize(root: Path = ROOT, check: bool = False, providers=PROVIDERS) -> 
             pending.append(onboarding_rel)
             updates.append((onboarding_path, updated))
         for name, canonical in canonical_skills.items():
-            relative = f'plugins/{provider}/skills/{name}/SKILL.md'
-            target = skills_dir / name / 'SKILL.md'
-            skill_dir = target.parent
-            if skill_dir.is_symlink():
-                raise ValueError(f'Refusing symlink path: {skill_dir}')
+            relative = f'plugins/{provider}/skills/{name}'
+            target = skills_dir / name
+            for ancestor in (target.parent, *target.parent.parents):
+                if ancestor == skills_dir:
+                    break
+                if ancestor.is_symlink():
+                    raise ValueError(f'Refusing symlink path: {ancestor}')
             if target.exists() or target.is_symlink():
                 target = _regular_file(root, relative)
             if not target.is_file() or target.read_text() != canonical:
