@@ -3,7 +3,9 @@ import hashlib
 import importlib.util
 import json
 import io
+import os
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -14,6 +16,58 @@ URL = 'https://example.test/mcp/openai'
 
 
 class MCPTestPackageTests(unittest.TestCase):
+    def test_launcher_requires_an_existing_git_checkout_before_starting(self):
+        environment = os.environ.copy()
+        environment.pop('MOBILERUN_MCP_REPO', None)
+        script = str(ROOT / 'testing/mcp/start-local.sh')
+        result = subprocess.run(['bash', script], env=environment, capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('MOBILERUN_MCP_REPO', result.stderr)
+        with tempfile.TemporaryDirectory() as folder:
+            environment['MOBILERUN_MCP_REPO'] = folder
+            result = subprocess.run(['bash', script], env=environment, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('git checkout', result.stderr)
+
+    def test_manifest_assets_exist_in_local_and_remote_archives(self):
+        builder = self.load_builder()
+        with tempfile.TemporaryDirectory() as folder:
+            for mode in ('remote', 'local'):
+                output = Path(folder) / mode
+                archives = (builder.build_packages(URL, output) if mode == 'remote' else
+                            builder.build_local_packages('https://example.test/' + 'a' * 64, output))
+                for path in archives:
+                    with self.subTest(mode=mode, archive=path.name), zipfile.ZipFile(path) as archive:
+                        manifest = json.loads(archive.read('.claude-plugin/plugin.json' if 'claude' in path.name else 'plugin.json'))
+                        def assets(value):
+                            if isinstance(value, dict):
+                                for key, item in value.items():
+                                    if isinstance(item, str) and (item.startswith('assets/') or item.startswith('./assets/')):
+                                        yield item.removeprefix('./')
+                                    else:
+                                        yield from assets(item)
+                            elif isinstance(value, list):
+                                for item in value:
+                                    yield from assets(item)
+                        for asset in assets(manifest):
+                            self.assertIn(asset, archive.namelist())
+
+    def test_local_packages_use_distinct_profile_routes_and_test_guidance(self):
+        builder = self.load_builder()
+        with tempfile.TemporaryDirectory() as folder:
+            outputs = builder.build_local_packages('https://example.test/' + 'a' * 64, Path(folder))
+            for output in outputs:
+                claude = 'claude' in output.name
+                with zipfile.ZipFile(output) as archive:
+                    config = json.loads(archive.read('.mcp.json' if claude else 'mcp.json'))
+                    server, = config['mcpServers'].values()
+                    self.assertEqual(server['url'], 'https://example.test/' + 'a' * 64 + ('/mcp/claude' if claude else '/mcp/openai'))
+                    self.assertIn('No client authentication', archive.read('skills/onboarding/SKILL.md').decode())
+                    self.assertNotIn('complete browser sign-in', archive.read('skills/onboarding/SKILL.md').decode())
+                    if claude:
+                        manifest = json.loads(archive.read('.claude-plugin/plugin.json'))
+                        self.assertEqual(manifest['name'], 'mobilerun-tunnel-test')
+
     def load_builder(self):
         self.assertTrue(SCRIPT.is_file(), 'Tracked remote test package builder missing')
         spec = importlib.util.spec_from_file_location('mcp_test_package_builder', SCRIPT)

@@ -2,9 +2,17 @@
 
 ## One-file start
 
-Requires a running Docker daemon, `MOBILERUN_API_KEY` in the environment, and free loopback ports 18080 and 18081. It starts a container and uses the main `/mcp` profile.
+Requires Docker, Git, Node.js, Python 3, curl, OpenSSL, cloudflared, and free loopback ports 18080 and 18081. Set the key and point to a local checkout of `droidrun/mobilerun-mcp`:
 
-Run `source ~/.agent-env` and `./testing/mcp/start-local.sh`. It builds the image, starts a private-path proxy and temporary public tunnel, verifies MCP, and writes Codex and Claude ZIPs to `testing/mcp/zip/` (git-ignored) and `~/Downloads`. Use `--no-build` to reuse the image, `--show-url` to print the sensitive URL, or `MOBILERUN_MCP_REPO` to override the checkout. Anyone with the URL can access your account; keep the URL and ZIPs private. The URL changes on restart. Ctrl-C removes the container and stops the proxy and tunnel.
+```bash
+export MOBILERUN_API_KEY=... # supply your key privately
+export MOBILERUN_MCP_REPO=/path/to/mobilerun-mcp
+./testing/mcp/start-local.sh
+```
+
+The launcher requires `MOBILERUN_MCP_REPO` (except with `--no-build`) and builds from that checkout's `origin/main`. It starts a private-path proxy and temporary public tunnel, verifies MCP, and writes Codex and Claude ZIPs to `testing/mcp/zip/` (git-ignored) and `~/Downloads`. Use `--no-build` to reuse the image or `--show-url` to print the sensitive URL. Anyone with the URL can access your account; keep the URL and ZIPs private. The URL changes on restart. Ctrl-C removes the container and stops the proxy and tunnel.
+
+The packages use the same `/mcp/claude` and `/mcp/openai` provider routes as the shipped Claude and OpenAI packages. Only those exact routes are forwarded; the base route runs `no-commerce` and is not reachable through the proxy. The viewer is an MCP resource, not a separate proxy path. On the provider routes, `numbers_create` is fixed to `included_only` and unexpected checkout responses are withheld, so no paid checkout is exposed. Device and task operations use the key owner's account capacity and billing. Do not create devices just to test installation.
 
 ---
 

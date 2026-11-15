@@ -2,7 +2,6 @@
 set -euo pipefail
 umask 077
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-REPO="${MOBILERUN_MCP_REPO:-$HOME/Documents/GitHub/mobilerun-mcp}"
 build=1
 show=0
 for arg in "$@"; do
@@ -12,10 +11,18 @@ for arg in "$@"; do
     *) echo "Usage: $0 [--no-build] [--show-url]" >&2; exit 2 ;;
   esac
 done
+if [ "$build" = 1 ]; then
+  : "${MOBILERUN_MCP_REPO:?Set MOBILERUN_MCP_REPO to the mobilerun-mcp git checkout (not needed with --no-build)}"
+  REPO="$MOBILERUN_MCP_REPO"
+  if [ "$(git -C "$REPO" rev-parse --is-inside-work-tree 2>/dev/null || true)" != true ]; then
+    echo 'MOBILERUN_MCP_REPO must point to an existing git checkout.' >&2; exit 1
+  fi
+fi
 : "${MOBILERUN_API_KEY:?Set MOBILERUN_API_KEY before starting}"
 for cmd in docker git node cloudflared curl openssl python3; do
   command -v "$cmd" >/dev/null || { echo "Missing dependency: $cmd" >&2; exit 1; }
 done
+python3 "$ROOT/scripts/sync_skills.py" --check
 export MOBILERUN_CHATGPT_PATH_TOKEN="${MOBILERUN_CHATGPT_PATH_TOKEN:-$(openssl rand -hex 32)}"
 if [[ ! "$MOBILERUN_CHATGPT_PATH_TOKEN" =~ ^[0-9a-f]{64,}$ ]]; then
   echo 'Path token must be at least 64 lowercase hexadecimal characters.' >&2; exit 1
@@ -50,7 +57,7 @@ if [ "$build" = 1 ]; then
   git -C "$REPO" fetch origin main
   git -C "$REPO" archive origin/main | docker build -t mobilerun-mcp-local-main -
 fi
-container_id="$(docker create --name mobilerun-mcp-local --label "mobilerun-local-launcher=$$" -p 127.0.0.1:18080:8080 -e MOBILERUN_API_KEY -e MCP_DEVICE_STREAM_ENABLED=true -e MCP_DEVICE_STREAM_ORIGINS=wss://api.mobilerun.ai,wss://cloud.mobilerun.ai mobilerun-mcp-local-main)"
+container_id="$(docker create --name mobilerun-mcp-local --label "mobilerun-local-launcher=$$" -p 127.0.0.1:18080:8080 -e MOBILERUN_API_KEY -e MCP_POLICY_PROFILE=no-commerce -e MCP_POLICY_PROFILES=claude,openai -e MCP_DEVICE_STREAM_ENABLED=true -e MCP_DEVICE_STREAM_ORIGINS=wss://api.mobilerun.ai,wss://cloud.mobilerun.ai mobilerun-mcp-local-main)"
 docker start "$container_id" >/dev/null
 ready=0
 for ((i=0; i<60; i++)); do
@@ -68,7 +75,7 @@ function route(req) {
   const match = /^\/([0-9a-f]+)(\/[^#]*)$/.exec(req.url || '');
   if (!match) return null;
   const candidate = Buffer.from(match[1]);
-  return candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected) ? match[2] : null;
+  return candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected) && ['/mcp/claude', '/mcp/openai'].includes(match[2]) ? match[2] : null;
 }
 function headers(req) {
   const result = {...req.headers, host:'127.0.0.1:18080', 'x-mobilerun-cloud-api-key':key};
@@ -117,7 +124,8 @@ for ((i=0; i<60; i++)); do
   sleep 1
 done
 [ -n "$tunnel" ] || { echo 'Tunnel failed to start.' >&2; exit 1; }
-export LOCAL_MCP_URL="$tunnel/$MOBILERUN_CHATGPT_PATH_TOKEN/mcp"
+export LOCAL_MCP_BASE="$tunnel/$MOBILERUN_CHATGPT_PATH_TOKEN"
+export LOCAL_MCP_URL="$LOCAL_MCP_BASE/mcp/openai"
 export LOCAL_MCP_ROOT="$ROOT"
 python3 - <<'PY'
 import io, json, os, pathlib, stat, tempfile, time, urllib.request, urllib.error, zipfile
@@ -154,57 +162,26 @@ try:
 except urllib.error.HTTPError as exc:
     if exc.code != 404: raise
 print('Public MCP initialize and tools/list passed; missing token returns 404.')
-files = {
- 'openai': ['plugin.json','mcp.json','README.md','LICENSE','assets/logo.svg','skills/onboarding/SKILL.md','skills/mobile-tasks/SKILL.md'],
- 'claude': ['.claude-plugin/plugin.json','.mcp.json','README.md','LICENSE','assets/icon.png','skills/onboarding/SKILL.md','skills/mobile-tasks/SKILL.md'],
-}
-out = root / 'testing' / 'mcp' / 'zip'
-out.mkdir(exist_ok=True)
-def refuse_unsafe(target):
+import sys
+sys.path.insert(0, str(root))
+from testing.mcp.package_plugins import build_local_packages
+outputs = build_local_packages(os.environ['LOCAL_MCP_BASE'], root / 'testing' / 'mcp' / 'zip')
+for output in outputs:
+    destination = pathlib.Path.home() / 'Downloads' / output.name
+    if destination.is_symlink() or (destination.exists() and not destination.is_file()):
+        raise ValueError('Refusing non-regular destination')
+    fd, name = tempfile.mkstemp(prefix='.local-mcp-', suffix='.zip', dir=destination.parent)
     try:
-        mode = target.lstat().st_mode
-    except FileNotFoundError:
-        return
-    if not stat.S_ISREG(mode):
-        raise ValueError(f'Refusing non-regular destination: {target}')
-
-def write_archive(target, data):
-    refuse_unsafe(target)
-    fd, name = tempfile.mkstemp(prefix='.local-mcp-', suffix='.zip', dir=target.parent)
-    try:
-        with os.fdopen(fd, 'w+b') as file:
-            file.write(data)
-        refuse_unsafe(target)
-        os.replace(name, target)
+        with os.fdopen(fd, 'wb') as file:
+            file.write(output.read_bytes())
+        if destination.is_symlink() or (destination.exists() and not destination.is_file()):
+            raise ValueError('Refusing non-regular destination')
+        os.replace(name, destination)
     finally:
-        if os.path.exists(name):
-            os.unlink(name)
-
-for provider, names in files.items():
-    source = root / 'plugins' / provider
-    target = out / ('local-codex.zip' if provider == 'openai' else 'local-claude.zip')
-    contents = {name:(source/name).read_bytes() for name in names}
-    contents['LOCAL-TEST.md'] = (b'# Local test\n\nThis private tunnel URL grants access using the owner API key. '
-        b'No OAuth is needed. The URL changes on restart. Keep this ZIP private.\n')
-    config = 'mcp.json' if provider == 'openai' else '.mcp.json'
-    contents[config] = (json.dumps({'mcpServers':{'mobilerun':{'type':'streamable-http' if provider == 'openai' else 'http', 'url':url}}}, indent=2)+'\n').encode()
-    if provider == 'openai':
-        manifest = json.loads(contents['plugin.json'])
-        manifest['name'] = 'mobilerun-local'
-        manifest['extensions']['com.openai']['interface']['displayName'] = 'Mobilerun (local)'
-        contents['plugin.json'] = (json.dumps(manifest, indent=2)+'\n').encode()
-    destination = pathlib.Path.home() / 'Downloads' / target.name
-    refuse_unsafe(target)
-    refuse_unsafe(destination)
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
-        for member, data in contents.items():
-            archive.writestr(member, data)
-    write_archive(target, buffer.getvalue())
-    write_archive(destination, buffer.getvalue())
-    print('ZIP:', target, 'and', destination)
+        if os.path.exists(name): os.unlink(name)
+    print('ZIP:', output, 'and', destination)
 PY
-if [ "$show" = 1 ]; then printf 'MCP URL: %s\n' "$LOCAL_MCP_URL"; else printf 'MCP URL: %s/[redacted]/mcp\n' "$tunnel"; fi
+if [ "$show" = 1 ]; then printf 'MCP URL: %s\n' "$LOCAL_MCP_URL"; else printf 'MCP URL: %s/[redacted]/mcp/openai\n' "$tunnel"; fi
 printf 'Anyone with the URL can access your account. Ctrl-C to stop.\n'
 while kill -0 "$proxy_pid" 2>/dev/null && kill -0 "$tunnel_pid" 2>/dev/null; do sleep 1; done
 echo 'A managed process exited.' >&2
