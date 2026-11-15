@@ -23,6 +23,10 @@ class SkillSyncTests(unittest.TestCase):
             canonical = self.root / f'shared/skills/{name}/SKILL.md'
             canonical.parent.mkdir(parents=True, exist_ok=True)
             canonical.write_text(f'Canonical {name}')
+        for name in sync.REFERENCE_FILES:
+            reference = self.root / 'shared' / name
+            reference.parent.mkdir(parents=True, exist_ok=True)
+            reference.write_text(f'Canonical {name}')
         for provider in sync.PROVIDERS:
             onboarding = self.root / f'plugins/{provider}/skills/onboarding/SKILL.md'
             onboarding.parent.mkdir(parents=True)
@@ -33,7 +37,7 @@ class SkillSyncTests(unittest.TestCase):
 
     def test_sync_repairs_stale_copies_and_check_then_passes(self):
         pending = sync.synchronize(self.root)
-        self.assertEqual(len(pending), 10)
+        self.assertEqual(len(pending), 10 + len(sync.PROVIDERS) * len(sync.REFERENCE_FILES))
         self.assertEqual(sync.check(self.root), [])
         for provider in sync.PROVIDERS:
             text = (self.root / f'plugins/{provider}/skills/onboarding/SKILL.md').read_text()
@@ -41,6 +45,32 @@ class SkillSyncTests(unittest.TestCase):
             for name in sync.SKILLS:
                 self.assertEqual((self.root / f'plugins/{provider}/skills/{name}/SKILL.md').read_text(),
                                  f'Canonical {name}')
+
+    def test_reference_files_sync_and_check_drift(self):
+        source = self.root / 'shared/skills/mobile-tasks/references/tasks.md'
+        source.write_text('Task guidance')
+        sync.synchronize(self.root)
+        for provider in sync.PROVIDERS:
+            target = self.root / f'plugins/{provider}/skills/mobile-tasks/references/tasks.md'
+            self.assertEqual(target.read_text(), 'Task guidance')
+        target.write_text('stale')
+        self.assertIn(target.relative_to(self.root).as_posix(), sync.check(self.root))
+
+    def test_inventory_rejects_new_or_missing_canonical_reference(self):
+        extra = self.root / 'shared/skills/mobile-tasks/references/new.md'
+        extra.write_text('new')
+        with self.assertRaises(ValueError):
+            sync.check(self.root)
+        extra.unlink()
+        (self.root / 'shared' / sync.REFERENCE_FILES[0]).unlink()
+        with self.assertRaises(ValueError):
+            sync.check(self.root)
+
+    def test_check_flags_stale_provider_reference(self):
+        sync.synchronize(self.root)
+        stale = self.root / 'plugins/claude/skills/mobile-tasks/references/obsolete.md'
+        stale.write_text('obsolete')
+        self.assertIn(stale.relative_to(self.root).as_posix(), sync.check(self.root))
 
     def test_cli_check_reports_drift_without_writing(self):
         before = (self.root / 'plugins/claude/skills/onboarding/SKILL.md').read_text()

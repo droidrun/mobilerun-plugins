@@ -10,7 +10,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from scripts.sync_skills import _regular_file, check
+from scripts.sync_skills import _regular_file, check, REFERENCE_FILES
 
 VERSION = '0.4.0'
 ARTIFACTS = ('test-plugin-openai.zip', 'test-plugin-claude.zip')
@@ -95,6 +95,7 @@ def package_contents(provider: str, url: str) -> dict[str, bytes]:
         'LICENSE': _regular_file(source, 'LICENSE').read_bytes(),
         'skills/onboarding/SKILL.md': onboarding.encode(),
         'skills/mobile-tasks/SKILL.md': _regular_file(source, 'skills/mobile-tasks/SKILL.md').read_bytes(),
+        **{name: _regular_file(source, name).read_bytes() for name in REFERENCE_FILES},
     }
 
 
