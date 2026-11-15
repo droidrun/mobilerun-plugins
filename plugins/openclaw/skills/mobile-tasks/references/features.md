@@ -1,8 +1,6 @@
 # Feature requirements
 
-## Feature requirements
-
-Explain only the requested feature or actual limitation. Respect included-only and no-commerce tool/profile restrictions and user constraints: never initiate purchases or bypass restrictions. No prices, plan lists or upgrade prompts.
+Explain only the requested feature or actual limitation. Respect included-only and no-commerce tool/profile restrictions and user constraints: never initiate purchases or bypass restrictions. Approval does not override included-only or no-commerce restrictions. No prices, plan lists or upgrade prompts.
 
 | Feature | Relevant requirement |
 | --- | --- |
@@ -22,4 +20,3 @@ Check balances in active workspace account usage settings. Only offer [resource 
 - **Permission denied or unavailable operation:** check the connected workspace and exposed tool schema; respect the restriction.
 - **402 or quota error:** report the returned reason; check the applicable workspace limit: slots, concurrency, device minutes or execution credits.
 - **Failed or stalled task:** inspect status, summary and trajectory; explain the evidence and adjust the task only after deciding whether a new run is appropriate. Do not blindly retry an uncertain write.
-

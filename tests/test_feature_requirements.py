@@ -12,7 +12,7 @@ ONBOARDING = ROOT / 'shared/onboarding-first-device.md'
 class FeatureRequirementsTests(unittest.TestCase):
     def test_mobile_conditional_resource_requirements(self):
         text = FEATURES.read_text().lower()
-        section = text.split('## feature requirements', 1)[-1].split('\n## ', 1)[0]
+        section = text.split('# feature requirements', 1)[-1].split('\n## ', 1)[0]
         for term in ('only', 'requested', 'limitation', 'subscription slots', 'minute',
                      'concurrency', 'execution credits', 'automation', 'numbers', 'sms',
                      'country', 'included capacity', 'separate resource', 'mailboxes',
