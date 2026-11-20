@@ -16,7 +16,7 @@ VERSION = '0.4.0'
 ARTIFACTS = ('test-plugin-openai.zip', 'test-plugin-claude.zip')
 
 
-def validate_url(url: str) -> str:
+def validate_url(url: str, *, local: bool = False) -> str:
     """Require the public bridge route, without credentials or URL ambiguity."""
     if not isinstance(url, str) or re.search(r'[\s\\]', url):
         raise ValueError('Expected an HTTPS bridge URL without whitespace')
@@ -27,31 +27,32 @@ def validate_url(url: str) -> str:
         raise ValueError('Invalid bridge URL') from None
     if (parts.scheme != 'https' or not parts.hostname
             or parts.username is not None or parts.password is not None
-            or parts.path != '/mcp/openai' or parts.query or parts.fragment
+            or (not re.fullmatch(r'/[0-9a-f]{64,}/mcp/openai', parts.path) if local else parts.path != '/mcp/openai') or parts.query or parts.fragment
             or (port is not None and not 1 <= port <= 65535)):
         raise ValueError('Expected HTTPS URL ending /mcp/openai without credentials, query, or fragment')
     return url
 
 
-def package_contents(provider: str, url: str) -> dict[str, bytes]:
+def package_contents(provider: str, url: str, local: bool = False) -> dict[str, bytes]:
     source = ROOT / 'plugins' / ('claude' if provider == 'claude' else 'test-plugin')
     claude = provider == 'claude'
     manifest_path = '.claude-plugin/plugin.json' if claude else 'plugin.json'
     manifest = json.loads(_regular_file(source, manifest_path).read_text())
-    manifest.update(name='mobilerun-tunnel-test' if claude else 'test-plugin', version=VERSION,
-                    description='Temporary remote MCP test connection. No client authentication required.')
+    manifest.update(name='mobilerun', version=VERSION,
+                    description='Temporary remote MCP test connection. Anyone with the URL can act as the bridge account owner.')
     if claude:
-        manifest['displayName'] = 'Mobilerun Tunnel Test'
+        manifest['displayName'] = 'Mobilerun'
     else:
         interface = manifest['extensions']['com.openai']['interface']
-        interface.update(shortDescription='Remote MCP test', longDescription=(
+        interface.update(displayName='Mobilerun', composerIcon='./assets/logo.svg', logo='./assets/logo.svg',
+                         shortDescription='Remote MCP test', longDescription=(
             'Remote MCP test connection for ChatGPT Work. No client authentication or local Node.js '
             'bridge is required. Regular chat tool attachment remains unverified. Anyone with the URL '
             'can act through the bridge owner account. Development use only.'
         ))
         manifest['keywords'] = ['mobilerun', 'mcp', 'testing', 'remote']
     server = {'type': 'http' if claude else 'streamable-http', 'url': url}
-    config = {'mcpServers': {'mobilerun-tunnel-test' if claude else 'test-plugin': server}}
+    config = {'mcpServers': {'mobilerun' if claude else 'mobilerun-test': server}}
     if not claude:
         config = {'$schema': 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json', **config}
     shared = _regular_file(ROOT, 'shared/onboarding-first-device.md').read_text()
@@ -70,13 +71,15 @@ def package_contents(provider: str, url: str) -> dict[str, bytes]:
         + shared
     )
     host = 'Claude' if claude else 'ChatGPT Work'
+    profile_guidance = ('This uses the host-specific MCP policy profile.' if local else
+                        'This uses the bridge route /mcp/openai and the origin OpenAI policy profile, '
+                        'not a Claude-specific profile.')
     readme = (
         f'# {host} remote MCP test plugin\n\nVersion: {VERSION}.\n\nEndpoint: `{url}`\n\n'
         'No client authentication is required. No credentials are bundled. Anyone with the URL can '
         'use all exposed tools as the bridge owner, including device control and credit-consuming '
         'actions. Development testing only; stop the tunnel when finished.\n\n'
-        'This uses the bridge route /mcp/openai and the origin OpenAI policy profile, not a '
-        'Claude-specific profile. The Mac, Docker MCP origin, bridge, and tunnel must remain running. '
+        f'{profile_guidance} The Mac, Docker MCP origin, bridge, and tunnel must remain running. '
         'Quick Tunnel restarts change the hostname; rebuild both ZIPs with the new URL.\n\n'
         'Bundled skills: onboarding and mobile-tasks. Verify initialization and tool discovery first, '
         'then explicitly request list_devices to verify account access. Do not create devices just '
@@ -88,7 +91,7 @@ def package_contents(provider: str, url: str) -> dict[str, bytes]:
            'Import in the supported ChatGPT plugin UI and enable the connection. This setup was '
            'reported working in ChatGPT Work; tool attachment in regular chats is not established.\n')
     )
-    return {
+    contents = {
         manifest_path: (json.dumps(manifest, indent=2) + '\n').encode(),
         '.mcp.json' if claude else 'mcp.json': (json.dumps(config, indent=2) + '\n').encode(),
         'README.md': readme.encode(),
@@ -96,10 +99,25 @@ def package_contents(provider: str, url: str) -> dict[str, bytes]:
         'skills/onboarding/SKILL.md': onboarding.encode(),
         'skills/mobile-tasks/SKILL.md': _regular_file(source, 'skills/mobile-tasks/SKILL.md').read_bytes(),
     }
+    if claude:
+        icon = manifest['icon']
+        contents[icon] = _regular_file(source, icon).read_bytes()
+    else:
+        contents['assets/logo.svg'] = _regular_file(ROOT / 'plugins' / 'openai', 'assets/logo.svg').read_bytes()
+    # Include all additional skill files (such as shared references), but never symlinks.
+    skills = source / 'skills'
+    for path in sorted(skills.rglob('*')):
+        if path.is_symlink():
+            raise ValueError('Refusing symlink in skill tree')
+        if path.is_file():
+            name = path.relative_to(source).as_posix()
+            if name not in contents:
+                contents[name] = _regular_file(source, name).read_bytes()
+    return contents
 
 
-def build_packages(url: str, output_dir: Path) -> list[Path]:
-    url = validate_url(url)
+def build_packages(url: str, output_dir: Path, *, local: bool = False) -> list[Path]:
+    url = validate_url(url, local=local)
     output_dir = Path(output_dir).absolute()
     if output_dir.is_symlink():
         raise ValueError('Refusing symlinked output directory')
@@ -107,7 +125,8 @@ def build_packages(url: str, output_dir: Path) -> list[Path]:
     output_dir = output_dir.resolve()
     if check(ROOT):
         raise ValueError('Shared skills are out of sync; run scripts/sync_skills.py')
-    packages = [package_contents(provider, url) for provider in ('openai', 'claude')]
+    claude_url = url.removesuffix('/openai') + '/claude' if local else url
+    packages = [package_contents('openai', url, local), package_contents('claude', claude_url, local)]
     outputs = [output_dir / name for name in ARTIFACTS]
     if any(p.is_symlink() or (p.exists() and not p.is_file()) for p in outputs):
         raise ValueError('Refusing nonregular output archive')
@@ -129,6 +148,13 @@ def build_packages(url: str, output_dir: Path) -> list[Path]:
         finally:
             temporary.unlink(missing_ok=True)
     return outputs
+
+
+def build_local_packages(base_url: str, output_dir: Path) -> list[Path]:
+    parts = urlsplit(base_url)
+    if not re.fullmatch(r'/[0-9a-f]{64,}', parts.path) or parts.query or parts.fragment:
+        raise ValueError('Expected a private token URL')
+    return build_packages(base_url + '/mcp/openai', output_dir, local=True)
 
 
 def main(argv=None) -> int:
