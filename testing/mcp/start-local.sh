@@ -11,6 +11,15 @@ for arg in "$@"; do
     *) echo "Usage: $0 [--no-build] [--show-url]" >&2; exit 2 ;;
   esac
 done
+port="${MOBILERUN_LOCAL_MCP_PORT-18080}"
+if [[ ! "$port" =~ ^[0-9]+$ ]]; then
+  echo 'MOBILERUN_LOCAL_MCP_PORT must be an integer from 1 to 65535, excluding 18081.' >&2; exit 1
+fi
+while [[ ${#port} -gt 1 && "$port" = 0* ]]; do port="${port#0}"; done
+if [ "${#port}" -gt 5 ] || [ "$port" -lt 1 ] || [ "$port" -gt 65535 ] || [ "$port" -eq 18081 ]; then
+  echo 'MOBILERUN_LOCAL_MCP_PORT must be an integer from 1 to 65535, excluding 18081.' >&2; exit 1
+fi
+export MOBILERUN_LOCAL_MCP_PORT="$port"
 if [ "$build" = 1 ]; then
   : "${MOBILERUN_MCP_REPO:?Set MOBILERUN_MCP_REPO to the mobilerun-mcp git checkout (not needed with --no-build)}"
   REPO="$MOBILERUN_MCP_REPO"
@@ -22,6 +31,17 @@ fi
 for cmd in docker git node cloudflared curl openssl python3; do
   command -v "$cmd" >/dev/null || { echo "Missing dependency: $cmd" >&2; exit 1; }
 done
+python3 - <<'PY'
+import os, socket, sys
+port = int(os.environ['MOBILERUN_LOCAL_MCP_PORT'])
+with socket.socket() as sock:
+    try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind(('127.0.0.1', port))
+    except OSError as exc:
+        print(f'Cannot use 127.0.0.1:{port}: {exc}', file=sys.stderr)
+        sys.exit(1)
+PY
 python3 "$ROOT/scripts/sync_skills.py" --check
 export MOBILERUN_CHATGPT_PATH_TOKEN="${MOBILERUN_CHATGPT_PATH_TOKEN:-$(openssl rand -hex 32)}"
 if [[ ! "$MOBILERUN_CHATGPT_PATH_TOKEN" =~ ^[0-9a-f]{64,}$ ]]; then
@@ -57,11 +77,11 @@ if [ "$build" = 1 ]; then
   git -C "$REPO" fetch origin main
   git -C "$REPO" archive origin/main | docker build -t mobilerun-mcp-local-main -
 fi
-container_id="$(docker create --name mobilerun-mcp-local --label "mobilerun-local-launcher=$$" -p 127.0.0.1:18080:8080 -e MOBILERUN_API_KEY -e MCP_POLICY_PROFILE=no-commerce -e MCP_POLICY_PROFILES=claude,openai -e MCP_DEVICE_STREAM_ENABLED=true -e MCP_DEVICE_STREAM_ORIGINS=wss://api.mobilerun.ai,wss://cloud.mobilerun.ai mobilerun-mcp-local-main)"
+container_id="$(docker create --name mobilerun-mcp-local --label "mobilerun-local-launcher=$$" -p "127.0.0.1:$port:8080" -e MOBILERUN_API_KEY -e MCP_POLICY_PROFILE=no-commerce -e MCP_POLICY_PROFILES=claude,openai -e MCP_DEVICE_STREAM_ENABLED=true -e MCP_DEVICE_STREAM_ORIGINS=wss://api.mobilerun.ai,wss://cloud.mobilerun.ai mobilerun-mcp-local-main)"
 docker start "$container_id" >/dev/null
 ready=0
 for ((i=0; i<60; i++)); do
-  if curl --noproxy '*' -fsS http://127.0.0.1:18080/health >/dev/null 2>&1; then ready=1; break; fi
+  if curl --noproxy '*' -fsS "http://127.0.0.1:$port/health" >/dev/null 2>&1; then ready=1; break; fi
   sleep 1
 done
 [ "$ready" = 1 ] || { echo 'Container health check failed.' >&2; exit 1; }
@@ -71,6 +91,7 @@ const http = require('node:http');
 const crypto = require('node:crypto');
 const expected = Buffer.from(process.env.MOBILERUN_CHATGPT_PATH_TOKEN);
 const key = process.env.MOBILERUN_API_KEY;
+const port = Number(process.env.MOBILERUN_LOCAL_MCP_PORT);
 function route(req) {
   const match = /^\/([0-9a-f]+)(\/[^#]*)$/.exec(req.url || '');
   if (!match) return null;
@@ -78,14 +99,14 @@ function route(req) {
   return candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected) && ['/mcp/claude', '/mcp/openai'].includes(match[2]) ? match[2] : null;
 }
 function headers(req) {
-  const result = {...req.headers, host:'127.0.0.1:18080', 'x-mobilerun-cloud-api-key':key};
+  const result = {...req.headers, host:`127.0.0.1:${port}`, 'x-mobilerun-cloud-api-key':key};
   delete result.authorization; delete result['proxy-authorization']; delete result.cookie;
   return result;
 }
 const server = http.createServer((req, res) => {
   const path = route(req);
   if (!path) { res.writeHead(404, {'content-length':'0'}); return res.end(); }
-  const proxy = http.request({host:'127.0.0.1', port:18080, method:req.method, path, headers:headers(req)}, upstream => {
+  const proxy = http.request({host:'127.0.0.1', port, method:req.method, path, headers:headers(req)}, upstream => {
     res.writeHead(upstream.statusCode, upstream.headers); upstream.pipe(res);
   });
   proxy.on('error', () => { if (!res.headersSent) res.writeHead(502); res.end(); });
@@ -94,7 +115,7 @@ const server = http.createServer((req, res) => {
 server.on('upgrade', (req, socket, head) => {
   const path = route(req);
   if (!path) return socket.end('HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 0\r\n\r\n');
-  const proxy = http.request({host:'127.0.0.1', port:18080, method:req.method, path, headers:headers(req)});
+  const proxy = http.request({host:'127.0.0.1', port, method:req.method, path, headers:headers(req)});
   proxy.on('upgrade', (response, target, first) => {
     let output = 'HTTP/1.1 101 Switching Protocols\r\n';
     for (let i=0; i<response.rawHeaders.length; i+=2) output += response.rawHeaders[i]+': '+response.rawHeaders[i+1]+'\r\n';

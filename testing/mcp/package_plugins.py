@@ -38,20 +38,21 @@ def package_contents(provider: str, url: str, local: bool = False) -> dict[str, 
     claude = provider == 'claude'
     manifest_path = '.claude-plugin/plugin.json' if claude else 'plugin.json'
     manifest = json.loads(_regular_file(source, manifest_path).read_text())
-    manifest.update(name='mobilerun-tunnel-test' if claude else 'test-plugin', version=VERSION,
-                    description='Temporary remote MCP test connection. No client authentication required.')
+    manifest.update(name='mobilerun', version=VERSION,
+                    description='Temporary remote MCP test connection. Anyone with the URL can act as the bridge account owner.')
     if claude:
-        manifest['displayName'] = 'Mobilerun Tunnel Test'
+        manifest['displayName'] = 'Mobilerun'
     else:
         interface = manifest['extensions']['com.openai']['interface']
-        interface.update(shortDescription='Remote MCP test', longDescription=(
+        interface.update(displayName='Mobilerun', composerIcon='./assets/logo.svg', logo='./assets/logo.svg',
+                         shortDescription='Remote MCP test', longDescription=(
             'Remote MCP test connection for ChatGPT Work. No client authentication or local Node.js '
             'bridge is required. Regular chat tool attachment remains unverified. Anyone with the URL '
             'can act through the bridge owner account. Development use only.'
         ))
         manifest['keywords'] = ['mobilerun', 'mcp', 'testing', 'remote']
     server = {'type': 'http' if claude else 'streamable-http', 'url': url}
-    config = {'mcpServers': {'mobilerun-tunnel-test' if claude else 'test-plugin': server}}
+    config = {'mcpServers': {'mobilerun' if claude else 'mobilerun-test': server}}
     if not claude:
         config = {'$schema': 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json', **config}
     shared = _regular_file(ROOT, 'shared/onboarding-first-device.md').read_text()
@@ -101,6 +102,8 @@ def package_contents(provider: str, url: str, local: bool = False) -> dict[str, 
     if claude:
         icon = manifest['icon']
         contents[icon] = _regular_file(source, icon).read_bytes()
+    else:
+        contents['assets/logo.svg'] = _regular_file(ROOT / 'plugins' / 'openai', 'assets/logo.svg').read_bytes()
     # Include all additional skill files (such as shared references), but never symlinks.
     skills = source / 'skills'
     for path in sorted(skills.rglob('*')):

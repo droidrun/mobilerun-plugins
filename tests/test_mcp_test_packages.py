@@ -4,6 +4,8 @@ import importlib.util
 import json
 import io
 import os
+import socket
+import sys
 from pathlib import Path
 import subprocess
 import tempfile
@@ -16,6 +18,54 @@ URL = 'https://example.test/mcp/openai'
 
 
 class MCPTestPackageTests(unittest.TestCase):
+    def launcher_environment(self, folder):
+        log = Path(folder) / 'calls.log'
+        for name in ('docker', 'git', 'node', 'cloudflared', 'curl', 'openssl'):
+            stub = Path(folder) / name
+            stub.write_text('#!/bin/sh\nprintf "%s\\n" "$0" >> "$STUB_LOG"\nexit 99\n')
+            stub.chmod(0o755)
+        (Path(folder) / 'python3').symlink_to(sys.executable)
+        environment = os.environ.copy()
+        environment.update(PATH=folder + os.pathsep + '/usr/bin:/bin', STUB_LOG=str(log),
+                           MOBILERUN_API_KEY='fake-test-key')
+        return environment, log
+
+    def test_launcher_validates_and_uses_configured_host_port(self):
+        script = ROOT / 'testing/mcp/start-local.sh'
+        text = script.read_text()
+        self.assertIn('MOBILERUN_LOCAL_MCP_PORT', text)
+        self.assertIn('process.env.MOBILERUN_LOCAL_MCP_PORT', text)
+        self.assertIn('127.0.0.1:$port:8080', text)
+        self.assertIn('127.0.0.1:$port/health', text)
+        self.assertIn('host:`127.0.0.1:${port}`', text)
+        self.assertEqual(text.count("host:'127.0.0.1', port, method:req.method"), 2)
+        self.assertNotIn('127.0.0.1:18080', text)
+        self.assertNotIn('port:18080', text)
+        self.assertIn('sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)', text)
+        with tempfile.TemporaryDirectory() as folder:
+            environment, log = self.launcher_environment(folder)
+            for port in ('', '0', '65536', '18081', 'abc', '-1', '999999999999999999999'):
+                with self.subTest(port=port):
+                    environment['MOBILERUN_LOCAL_MCP_PORT'] = port
+                    result = subprocess.run(['/bin/bash', str(script), '--no-build'], env=environment,
+                                            capture_output=True, text=True)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn('MOBILERUN_LOCAL_MCP_PORT', result.stderr)
+                    self.assertFalse(log.exists() and log.read_text())
+
+    def test_launcher_rejects_occupied_port_before_starting_processes(self):
+        with tempfile.TemporaryDirectory() as folder, socket.socket() as listener:
+            listener.bind(('127.0.0.1', 0))
+            listener.listen()
+            port = listener.getsockname()[1]
+            environment, log = self.launcher_environment(folder)
+            environment['MOBILERUN_LOCAL_MCP_PORT'] = str(port)
+            result = subprocess.run(['/bin/bash', str(ROOT / 'testing/mcp/start-local.sh'), '--no-build'],
+                                    env=environment, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(f'Cannot use 127.0.0.1:{port}', result.stderr)
+            self.assertFalse(log.exists() and log.read_text())
+
     def test_launcher_requires_an_existing_git_checkout_before_starting(self):
         environment = os.environ.copy()
         environment.pop('MOBILERUN_MCP_REPO', None)
@@ -39,6 +89,21 @@ class MCPTestPackageTests(unittest.TestCase):
                 for path in archives:
                     with self.subTest(mode=mode, archive=path.name), zipfile.ZipFile(path) as archive:
                         manifest = json.loads(archive.read('.claude-plugin/plugin.json' if 'claude' in path.name else 'plugin.json'))
+                        self.assertEqual(manifest['name'], 'mobilerun')
+                        config = json.loads(archive.read('.mcp.json' if 'claude' in path.name else 'mcp.json'))
+                        self.assertEqual(list(config['mcpServers']),
+                                         ['mobilerun' if 'claude' in path.name else 'mobilerun-test'])
+                        if 'claude' in path.name:
+                            self.assertEqual(manifest['displayName'], 'Mobilerun')
+                            self.assertEqual(archive.read(manifest['icon']), (ROOT / 'plugins/claude/assets/icon.png').read_bytes())
+                        else:
+                            interface = manifest['extensions']['com.openai']['interface']
+                            self.assertEqual(interface['displayName'], 'Mobilerun')
+                            for key in ('composerIcon', 'logo'):
+                                self.assertEqual(interface[key], './assets/logo.svg')
+                                self.assertEqual(archive.read(interface[key].removeprefix('./')),
+                                                 (ROOT / 'plugins/openai/assets/logo.svg').read_bytes())
+                            self.assertIn('Anyone with the URL', interface['longDescription'])
                         def assets(value):
                             if isinstance(value, dict):
                                 for key, item in value.items():
@@ -66,7 +131,7 @@ class MCPTestPackageTests(unittest.TestCase):
                     self.assertNotIn('complete browser sign-in', archive.read('skills/onboarding/SKILL.md').decode())
                     if claude:
                         manifest = json.loads(archive.read('.claude-plugin/plugin.json'))
-                        self.assertEqual(manifest['name'], 'mobilerun-tunnel-test')
+                        self.assertEqual(manifest['name'], 'mobilerun')
 
     def load_builder(self):
         self.assertTrue(SCRIPT.is_file(), 'Tracked remote test package builder missing')
