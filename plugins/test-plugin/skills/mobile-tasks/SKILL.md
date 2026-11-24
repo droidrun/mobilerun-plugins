@@ -34,7 +34,7 @@ Check balances in active workspace account usage settings. Only offer [resource 
 | Agent execution | `run_task`, `get_task_status`, `get_task_summary`, `get_task_trajectory`, `send_task_message`, `stop_task` |
 | Evidence | `get_task_media_screenshot`, `get_task_media_ui_state`; device screenshot or recording tools |
 
-Names and arguments vary by profile. If unavailable, report the operation and offer an exposed alternative; do not bypass restrictions or pass REST options through an MCP tool.
+Android and iOS actions vary by platform, deployment and profile; Cloud iOS cannot stop or resume. Names and arguments vary by profile. If unavailable, report the operation and offer an exposed alternative; do not bypass restrictions or pass REST options through an MCP tool.
 
 ## Prepare the device and app
 

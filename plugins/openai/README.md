@@ -6,7 +6,7 @@ A portable plugin for ChatGPT and Codex with one hosted Mobilerun MCP connection
 
 - `plugin.json`: portable identity and OpenAI presentation, onboarding, and draft review cases.
 - `mcp.json`: one Streamable HTTP server at `https://cloud.mobilerun.ai/api/mcp/openai`.
-- `skills/onboarding/SKILL.md`: host-specific connection recovery plus synchronized Android-first guidance.
+- `skills/onboarding/SKILL.md`: host-specific connection recovery plus synchronized Android and iOS device guidance.
 - `skills/mobile-tasks/SKILL.md`: device and app work, direct control, bounded tasks, results, and recovery.
 - `assets/logo.svg`: existing 256×256 Mobilerun logo from `droidrun/mobilerun-mcp/assets/logo.svg`.
 - `LICENSE`: MIT notice included for independent distribution.

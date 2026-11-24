@@ -1,6 +1,6 @@
 # Mobilerun provider packages
 
-Mobilerun gives agents access to Android devices and automation through its existing MCP. This directory contains client packaging, not a fork of the MCP server.
+Mobilerun gives agents access to Android and iOS devices and automation through its existing MCP. This directory contains client packaging, not a fork of the MCP server.
 
 - Hosted MCP profiles: Claude uses `https://cloud.mobilerun.ai/api/mcp/claude`; OpenAI uses `https://cloud.mobilerun.ai/api/mcp/openai`. Cursor/OpenClaw retain the existing base endpoint `https://cloud.mobilerun.ai/api/mcp` until their own profiles are available. Follow the [documented browser OAuth flow](https://docs.mobilerun.ai/mcp-server#oauth-authentication) through the host. Actual host login remains unverified; never put credentials in chat or a distributed bundle.
 - Test Plugin uses a Node.js stdio bridge to `http://localhost:8080/mcp/openai` in a compatible desktop-local execution environment. It does not connect regular cloud-backed ChatGPT chats to localhost. Its local server requires an API key configured outside the package; live host authentication is unverified.

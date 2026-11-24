@@ -111,6 +111,15 @@ class OpenAIBundleTests(unittest.TestCase):
         self.assertTrue(path.is_file(), f'Missing OpenAI component: {relative}')
         return path.read_text()
 
+    def test_manifest_describes_android_and_ios(self):
+        manifest = json.loads(self.read('plugin.json'))
+        listing = manifest['extensions']['com.openai']['interface']
+        for text in (manifest['description'], listing['shortDescription'],
+                     listing['longDescription'], ' '.join(listing['capabilities'])):
+            self.assertIn('Android', text)
+            self.assertIn('iOS', text)
+        self.assertIn('ios', manifest['keywords'])
+
     def test_portable_manifest_and_setup_entry(self):
         manifest = json.loads(self.read('plugin.json'))
         self.assertEqual(manifest['$schema'],
