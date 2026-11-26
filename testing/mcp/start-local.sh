@@ -149,7 +149,7 @@ export LOCAL_MCP_BASE="$tunnel/$MOBILERUN_CHATGPT_PATH_TOKEN"
 export LOCAL_MCP_URL="$LOCAL_MCP_BASE/mcp/openai"
 export LOCAL_MCP_ROOT="$ROOT"
 python3 - <<'PY'
-import io, json, os, pathlib, stat, tempfile, time, urllib.request, urllib.error, zipfile
+import json, os, pathlib, time, urllib.request, urllib.error
 root = pathlib.Path(os.environ['LOCAL_MCP_ROOT'])
 url = os.environ['LOCAL_MCP_URL']
 headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}
@@ -185,21 +185,9 @@ except urllib.error.HTTPError as exc:
 print('Public MCP initialize and tools/list passed; missing token returns 404.')
 import sys
 sys.path.insert(0, str(root))
-from testing.mcp.package_plugins import build_local_packages
+from testing.mcp.package_plugins import build_local_packages, copy_packages_to_downloads
 outputs = build_local_packages(os.environ['LOCAL_MCP_BASE'], root / 'testing' / 'mcp' / 'zip')
-for output in outputs:
-    destination = pathlib.Path.home() / 'Downloads' / output.name
-    if destination.is_symlink() or (destination.exists() and not destination.is_file()):
-        raise ValueError('Refusing non-regular destination')
-    fd, name = tempfile.mkstemp(prefix='.local-mcp-', suffix='.zip', dir=destination.parent)
-    try:
-        with os.fdopen(fd, 'wb') as file:
-            file.write(output.read_bytes())
-        if destination.is_symlink() or (destination.exists() and not destination.is_file()):
-            raise ValueError('Refusing non-regular destination')
-        os.replace(name, destination)
-    finally:
-        if os.path.exists(name): os.unlink(name)
+for output, destination in zip(outputs, copy_packages_to_downloads(outputs)):
     print('ZIP:', output, 'and', destination)
 PY
 if [ "$show" = 1 ]; then printf 'MCP URL: %s\n' "$LOCAL_MCP_URL"; else printf 'MCP URL: %s/[redacted]/mcp/openai\n' "$tunnel"; fi

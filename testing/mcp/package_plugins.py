@@ -1,6 +1,7 @@
 """Build both remote MCP test plugins from a supplied temporary HTTPS URL."""
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -38,10 +39,10 @@ def package_contents(provider: str, url: str, local: bool = False) -> dict[str, 
     claude = provider == 'claude'
     manifest_path = '.claude-plugin/plugin.json' if claude else 'plugin.json'
     manifest = json.loads(_regular_file(source, manifest_path).read_text())
-    manifest.update(name='mobilerun', version=VERSION,
+    manifest.update(name='mobilerun-test' if claude else 'mobilerun', version=VERSION,
                     description='Temporary remote MCP test connection. Anyone with the URL can act as the bridge account owner.')
     if claude:
-        manifest['displayName'] = 'Mobilerun'
+        manifest['displayName'] = 'Mobilerun Test'
     else:
         interface = manifest['extensions']['com.openai']['interface']
         interface.update(displayName='Mobilerun', composerIcon='./assets/logo.svg', logo='./assets/logo.svg',
@@ -52,12 +53,30 @@ def package_contents(provider: str, url: str, local: bool = False) -> dict[str, 
         ))
         manifest['keywords'] = ['mobilerun', 'mcp', 'testing', 'remote']
     server = {'type': 'http' if claude else 'streamable-http', 'url': url}
-    config = {'mcpServers': {'mobilerun' if claude else 'mobilerun-test': server}}
+    config = {'mcpServers': {'mobilerun-test': server}}
     if not claude:
         config = {'$schema': 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json', **config}
+    test_server_guidance = (
+        'Use only the `mobilerun-test` MCP server for test checks and actions. '
+        'If only production Mobilerun tools are available, report the test connection as unverified.'
+    )
     shared = _regular_file(ROOT, 'shared/onboarding-first-device.md').read_text()
-    shared = shared.replace('Reconnect in the host and complete browser sign-in.',
-                            'Check that the private credential bridge is running; no client login is used.')
+    shared = shared.replace('Use the Mobilerun tools exposed by the host. When `list_devices` is available,',
+                            'When `list_devices` from `mobilerun-test` is available,')
+    recovery = (
+        'Have the launcher operator check that `start-local.sh` is running and that '
+        '`MOBILERUN_API_KEY` is valid. If the tunnel was restarted, reimport a fresh ZIP. '
+        'No client login is used.' if local else
+        'Check that the private credential bridge is running; no client login is used.'
+    )
+    shared = shared.replace('Reconnect in the host and complete browser sign-in.', recovery)
+    if local:
+        shared = shared.replace(
+            '| No Mobilerun tools | Enable the plugin/MCP connection in the host and check workspace availability. |',
+            f'| No test tools or transport error | Enable the test connection in the host. {recovery} |',
+        )
+        shared = shared.replace('Check the selected account/workspace and its access permissions.',
+                                'Check the permissions of the account that owns the launcher API key.')
     onboarding = (
         '---\nname: onboarding\ndescription: Use when checking the Mobilerun tunnel test '
         'connection, finding devices, or setting up a first phone.\n---\n\n'
@@ -66,7 +85,8 @@ def package_contents(provider: str, url: str, local: bool = False) -> dict[str, 
         'No client authentication, client API key, browser sign-in, or local Node.js launcher is required. '
         'The server-side bridge supplies its owner credential privately. Never ask for a key in chat. '
         'Anyone with this URL can access the exposed tools as the owner, including phone control and '
-        'credit-consuming operations. The tunnel is temporary. If tools are unavailable, report that '
+        f'credit-consuming operations. The tunnel is temporary. {test_server_guidance} '
+        'If test tools are unavailable, report that '
         'host tool attachment is unverified; do not infer a dead tunnel or successful connection.\n\n'
         + shared
     )
@@ -74,15 +94,18 @@ def package_contents(provider: str, url: str, local: bool = False) -> dict[str, 
     profile_guidance = ('This uses the host-specific MCP policy profile.' if local else
                         'This uses the bridge route /mcp/openai and the origin OpenAI policy profile, '
                         'not a Claude-specific profile.')
+    runtime_guidance = ('Keep `testing/mcp/start-local.sh` running while using this plugin.' if local else
+                        'The Mac, Docker MCP origin, bridge, and tunnel must remain running.')
     readme = (
         f'# {host} remote MCP test plugin\n\nVersion: {VERSION}.\n\nEndpoint: `{url}`\n\n'
         'No client authentication is required. No credentials are bundled. Anyone with the URL can '
         'use all exposed tools as the bridge owner, including device control and credit-consuming '
         'actions. Development testing only; stop the tunnel when finished.\n\n'
-        f'{profile_guidance} The Mac, Docker MCP origin, bridge, and tunnel must remain running. '
+        f'{profile_guidance} {runtime_guidance} '
         'Quick Tunnel restarts change the hostname; rebuild both ZIPs with the new URL.\n\n'
-        'Bundled skills: onboarding and mobile-tasks. Verify initialization and tool discovery first, '
-        'then explicitly request list_devices to verify account access. Do not create devices just '
+        f'Bundled skills: onboarding and mobile-tasks. {test_server_guidance} '
+        'Verify initialization and tool discovery first, then explicitly request `list_devices` '
+        'from `mobilerun-test` to verify account access. Do not create devices just '
         'to test installation. Backend usage is still subject to the account plan and billing.\n\n'
         + ('Extract the ZIP and load its folder in a compatible Claude plugin host. With Claude Code, '
            'use `claude --plugin-dir ./extracted-plugin`. Other Claude surfaces may require their own '
@@ -155,6 +178,29 @@ def build_local_packages(base_url: str, output_dir: Path) -> list[Path]:
     if not re.fullmatch(r'/[0-9a-f]{64,}', parts.path) or parts.query or parts.fragment:
         raise ValueError('Expected a private token URL')
     return build_packages(base_url + '/mcp/openai', output_dir, local=True)
+
+
+def copy_packages_to_downloads(outputs: list[Path]) -> list[Path]:
+    """Copy local test archives atomically, keeping their private permissions."""
+    downloads = Path.home() / 'Downloads'
+    downloads.mkdir(mode=0o700, exist_ok=True)
+    destinations = []
+    for output in outputs:
+        destination = downloads / output.name
+        if destination.is_symlink() or (destination.exists() and not destination.is_file()):
+            raise ValueError('Refusing non-regular destination')
+        fd, name = tempfile.mkstemp(prefix='.local-mcp-', suffix='.zip', dir=downloads)
+        temporary = Path(name)
+        try:
+            with os.fdopen(fd, 'wb') as file:
+                file.write(output.read_bytes())
+            if destination.is_symlink() or (destination.exists() and not destination.is_file()):
+                raise ValueError('Refusing non-regular destination')
+            temporary.replace(destination)
+        finally:
+            temporary.unlink(missing_ok=True)
+        destinations.append(destination)
+    return destinations
 
 
 def main(argv=None) -> int:
