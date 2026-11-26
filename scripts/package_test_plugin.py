@@ -8,11 +8,12 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.sync_skills import check as check_shared_skills
-from scripts.sync_skills import _regular_file, _replace_section
+from scripts.sync_skills import _regular_file, _replace_section, REFERENCE_FILES
 DISTRIBUTION_FILES = (
     'plugin.json', 'mcp.json', 'README.md', 'LICENSE',
     'scripts/local-mcp.mjs', 'scripts/setup-local-auth.mjs',
     'skills/onboarding/SKILL.md', 'skills/mobile-tasks/SKILL.md',
+    *REFERENCE_FILES,
 )
 
 
@@ -74,6 +75,9 @@ def main(argv=None) -> int:
             content = _regular_file(args.package, f'skills/{skill}/SKILL.md').read_text()
             expected = _regular_file(ROOT, f'shared/skills/{skill}/SKILL.md').read_text()
             if content != expected:
+                raise ValueError('Selected package shared skills are out of sync')
+        for name in REFERENCE_FILES:
+            if _regular_file(args.package, name).read_bytes() != _regular_file(ROOT, f'shared/{name}').read_bytes():
                 raise ValueError('Selected package shared skills are out of sync')
     except (OSError, ValueError) as error:
         print(f'Shared skill check failed: {error}', file=sys.stderr)
