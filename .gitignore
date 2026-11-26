@@ -21,3 +21,6 @@ __pycache__/
 /local-mcp.json
 /credentials.json
 /reports/
+
+# Secret-bearing local test ZIPs from testing/mcp/start-local.sh.
+/testing/mcp/zip/
