@@ -16,7 +16,7 @@ class OperationalSkillsTests(unittest.TestCase):
         for banned in ('testing-billing', 'billing unconfirmed', 'billing-free', 'evidence gap', 'risk section'):
             self.assertNotIn(banned, text.lower())
         self.assertNotRegex(text.lower(), r'(fetch|consult|read) (the )?(external |online |current )?docs')
-        return text.lower()
+        return (text + ''.join(p.read_text() for p in (path.parent / 'references').glob('*.md'))).lower()
 
     def assert_terms(self, text, terms):
         for term in terms:
@@ -43,7 +43,7 @@ class OperationalSkillsTests(unittest.TestCase):
 
     def test_device_readiness_has_bounded_handoff_in_both_recipes(self):
         recipes = (ROOT / 'shared' / 'onboarding-first-device.md',
-                   ROOT / 'shared' / 'skills' / 'mobile-tasks' / 'SKILL.md')
+                   ROOT / 'shared' / 'skills' / 'mobile-tasks' / 'references' / 'device-controls.md')
         for path in recipes:
             with self.subTest(path=path):
                 text = path.read_text().lower()
