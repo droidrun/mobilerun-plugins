@@ -1,6 +1,6 @@
 # Mobilerun for Cursor
 
-Connect Cursor to the [Mobilerun](https://mobilerun.ai) hosted MCP for Android devices, tasks, apps, and automation. Actual tools depend on the connection's server profile and permissions. This package is not a verified Marketplace listing.
+Connect Cursor to the [Mobilerun](https://mobilerun.ai) hosted MCP for Android and iOS devices, tasks, apps, and automation. Actual tools depend on the connection's server profile and permissions. This package is not a verified Marketplace listing.
 
 The package includes two practical skills in the standard `skills/<name>/SKILL.md` layout: `onboarding` for connection and first-device setup, and `mobile-tasks` for device/app control and bounded tasks. Tasks and devices can consume credits or minutes.
 

@@ -1,6 +1,6 @@
 # Mobilerun for Claude
 
-Connect Claude chat to Mobilerun's hosted MCP to work with Android devices and agent tasks. This bundle includes practical guidance for onboarding and mobile tasks; tools, permissions, and task execution come from the MCP server.
+Connect Claude chat to Mobilerun's hosted MCP to work with Android and iOS devices and agent tasks. This bundle includes practical guidance for onboarding and mobile tasks; tools, permissions, and task execution come from the MCP server.
 
 The two bundled skills are `onboarding` (connection and first-device setup) and `mobile-tasks` (device/app control and bounded tasks). Tasks and devices can consume execution credits or device minutes.
 
